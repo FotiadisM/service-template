@@ -1,0 +1,8 @@
+wipe = true
+no-hooks = true
+output = "internal/models"
+
+[psql]
+    # Connection params are injected via env vars (PSQL_*)
+    blacklist = ["migrations"]
+

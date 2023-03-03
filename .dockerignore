@@ -1,0 +1,9 @@
+/.git
+
+/bin
+/proto
+/api/doc
+
+/Dockerfile
+/.dockerignore
+/README.md

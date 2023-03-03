@@ -1,0 +1,13 @@
+version: v1
+name: buf.build/FotiadisM/mock-microservice
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/envoyproxy/protoc-gen-validate
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
+  rpc_allow_google_protobuf_empty_requests: true
+  rpc_allow_google_protobuf_empty_responses: true
