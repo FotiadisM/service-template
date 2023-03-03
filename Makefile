@@ -46,7 +46,7 @@ go-lint: golangci-lint ## Run golangci-lint against code.
 	@golangci-lint run
 
 .PHONY: test
-test: ## Run tests using gotestsum.
+test: go-vet go-lint ## Run tests using gotestsum.
 	gotestsum --format pkgname-and-test-fails -- -race -count=1 ./...
 
 .PHONY: tools

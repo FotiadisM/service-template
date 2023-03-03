@@ -2,12 +2,14 @@
 // versions:
 //   sqlc v1.16.0
 
-package store
+package queries
 
 import (
 	"database/sql/driver"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type UserScope string
@@ -15,6 +17,7 @@ type UserScope string
 const (
 	UserScopeApplicant UserScope = "applicant"
 	UserScopeCompany   UserScope = "company"
+	UserScopeAdmin     UserScope = "admin"
 )
 
 func (e *UserScope) Scan(src interface{}) error {
@@ -53,9 +56,10 @@ func (ns NullUserScope) Value() (driver.Value, error) {
 }
 
 type User struct {
+	ID        uuid.UUID
 	Email     string
 	Password  string
-	UserScope UserScope
+	Scope     UserScope
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

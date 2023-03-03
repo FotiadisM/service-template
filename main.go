@@ -13,13 +13,13 @@ import (
 	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
 	server "github.com/FotiadisM/mock-microservice/internal"
 	"github.com/FotiadisM/mock-microservice/internal/service"
-	"github.com/FotiadisM/mock-microservice/pkg/db"
+	"github.com/FotiadisM/mock-microservice/internal/store"
 	"github.com/FotiadisM/mock-microservice/pkg/logger"
 )
 
 type Config struct {
+	Store  store.Config
 	Server server.Config
-	DB     db.Config
 }
 
 func main() {
@@ -33,12 +33,12 @@ func main() {
 
 	log := logger.New(config.Server.Debug)
 
-	db, err := db.Open(ctx, config.DB)
+	store, err := store.New(ctx, config.Store)
 	if err != nil {
-		log.Fatal("failed to connect to database", zap.Error(err))
+		log.Fatal("failed to create store", zap.Error(err))
 	}
 
-	svc := service.NewService(db)
+	svc := service.NewService(store)
 
 	server := server.New(config.Server, log)
 	server.Configure(svc)

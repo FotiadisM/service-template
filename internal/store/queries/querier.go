@@ -2,16 +2,19 @@
 // versions:
 //   sqlc v1.16.0
 
-package store
+package queries
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteUser(ctx context.Context, email string) error
-	GetUser(ctx context.Context, email string) (User, error)
+	DeleteUser(ctx context.Context, id uuid.UUID) error
+	GetUser(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
 	ListUsers(ctx context.Context) ([]User, error)
 }
 
