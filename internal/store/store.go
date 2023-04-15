@@ -6,18 +6,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/FotiadisM/mock-microservice/internal/store/queries"
-	"github.com/FotiadisM/mock-microservice/pkg/logger"
 	"go.uber.org/zap"
 
 	// PostgreSQL databse driver.
 	_ "github.com/lib/pq"
+
+	"github.com/FotiadisM/mock-microservice/internal/store/queries"
+	"github.com/FotiadisM/mock-microservice/pkg/logger"
 )
 
 type TxFn func(store Store) (err error)
 
+//go:generate mockery --name Store --inpackage --exported --with-expecter --case=underscore
 type Store interface {
 	queries.Querier
+	Ping(ctx context.Context) error
 	WithTX(ctx context.Context, fn TxFn) error
 	WithConfiguredTX(ctx context.Context, options *sql.TxOptions, fn TxFn) error
 }
@@ -72,6 +75,10 @@ func New(ctx context.Context, c Config) (Store, error) {
 	return store, nil
 }
 
+func (s *store) Ping(ctx context.Context) error {
+	return s.DB.PingContext(ctx)
+}
+
 func (s *store) WithTX(ctx context.Context, fn TxFn) error {
 	return s.WithConfiguredTX(ctx, nil, fn)
 }
@@ -107,7 +114,7 @@ func (s *store) WithConfiguredTX(ctx context.Context, options *sql.TxOptions, fn
 	}()
 
 	err = fn(&store{
-		DB:      s.DB,
+		DB:      nil,
 		Queries: s.Queries.WithTx(tx),
 	})
 

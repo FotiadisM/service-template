@@ -1,4 +1,4 @@
-package service
+package servicev1
 
 import (
 	"context"
@@ -6,6 +6,6 @@ import (
 	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
 )
 
-func (s *Service) Login(ctx context.Context, in *authv1.LoginRequest) (*authv1.LoginResponse, error) {
+func (s *Service) Login(_ context.Context, _ *authv1.LoginRequest) (*authv1.LoginResponse, error) {
 	panic("not implemented") // TODO: Implement
 }

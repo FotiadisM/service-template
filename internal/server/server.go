@@ -11,11 +11,9 @@ import (
 	"time"
 
 	grpcopenmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
-	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/providers/opentracing/v2"
 	grpczap "github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tracing"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -69,7 +67,6 @@ func (s *Server) Configure(svc healthv1.HealthServer) {
 	s.serverMetrics = grpcopenmetrics.NewServerMetrics()
 
 	usi := []grpc.UnaryServerInterceptor{
-		tracing.UnaryServerInterceptor(grpcopentracing.InterceptorTracer()),
 		grpcopenmetrics.UnaryServerInterceptor(s.serverMetrics),
 		logging.UnaryServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
 		recovery.UnaryServerInterceptor(recoveryFunc),
@@ -78,7 +75,6 @@ func (s *Server) Configure(svc healthv1.HealthServer) {
 	}
 
 	ssi := []grpc.StreamServerInterceptor{
-		tracing.StreamServerInterceptor(grpcopentracing.InterceptorTracer()),
 		grpcopenmetrics.StreamServerInterceptor(s.serverMetrics),
 		logging.StreamServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
 		recovery.StreamServerInterceptor(recoveryFunc),

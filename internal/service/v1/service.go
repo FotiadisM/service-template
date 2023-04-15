@@ -1,4 +1,4 @@
-package service
+package servicev1
 
 import (
 	"context"
@@ -9,17 +9,17 @@ import (
 )
 
 type Service struct {
-	DB store.Store
+	store store.Store
 
 	authv1.UnimplementedAuthServiceServer
 	health.UnimplementedHealthServer
 }
 
-func NewService(DB store.Store) *Service {
-	return &Service{DB: DB}
+func NewService(st store.Store) *Service {
+	return &Service{store: st}
 }
 
-func (s *Service) Check(ctx context.Context, in *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
+func (s *Service) Check(_ context.Context, _ *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
 	res := &health.HealthCheckResponse{}
 	res.Status = health.HealthCheckResponse_SERVING
 	return res, nil

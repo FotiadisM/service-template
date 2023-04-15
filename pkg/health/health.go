@@ -22,6 +22,6 @@ func NewHealthClient(svc grpc_health_v1.HealthServer) *Client {
 	}
 }
 
-func (hc *Client) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error) {
+func (hc *Client) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, _ ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error) {
 	return hc.svc.Check(ctx, in)
 }

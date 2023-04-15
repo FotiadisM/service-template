@@ -14,9 +14,9 @@ $(LOCALBIN):
 ## path for all development dependencies
 export PATH := $(LOCALBIN):$(PATH)
 
-## Tool Versions
-GOLANGCILINT_VERSION ?= 1.51.2
-BUF_VERSION ?= 1.11.0
+## Tools Versions
+GOLANGCILINT_VERSION ?= 1.52.2
+BUF_VERSION ?= 1.15.0
 
 ##@ General
 
@@ -52,7 +52,7 @@ test: go-vet go-lint ## Run tests using gotestsum.
 .PHONY: tools
 tools: export GOBIN=$(LOCALBIN)
 tools: golangci-lint buf | $(LOCALBIN)  ## Install development tools
-	@cat tools.go | grep '_' | awk -F '"' '{print $$2}' | xargs -t go install
+	@cat tools/tools.go | grep '_' | awk -F '"' '{print $$2}' | xargs -t go install
 
 ##@ Build
 
