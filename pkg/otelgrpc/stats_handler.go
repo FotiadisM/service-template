@@ -231,28 +231,31 @@ func (h *serverStatsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCSt
 		))
 
 	case *stats.End:
-		// TODO(FotiadisM): fix bug with nil rpsStatus + pass status code to measurements
+		rpcCode := grpcCodes.OK
+		rpcMesg := ""
+		if rs.Error != nil {
+			st, ok := status.FromError(rs.Error)
+			if ok {
+				rpcCode = st.Code()
+				rpcMesg = st.Message()
+			} else {
+				rpcCode = grpcCodes.Internal
+				rpcMesg = rs.Error.Error()
+			}
+		}
+
+		span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
+		observer.attrs = append(observer.attrs, semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
+		if rpcCode != grpcCodes.OK {
+			span.SetStatus(codes.Error, rpcMesg)
+		}
+
 		if !observer.isStreaming {
 			duration := rs.EndTime.Sub(rs.BeginTime) / time.Millisecond
 			h.duration.Record(ctx, int64(duration), observer.attrs...)
 		}
 		h.requests.Record(ctx, int64(observer.msgReceiveCount), observer.attrs...)
 		h.responses.Record(ctx, int64(observer.msgSentCount), observer.attrs...)
-
-		var rpcStatus *status.Status
-		if rs.Error != nil {
-			st, ok := status.FromError(rs.Error)
-			rpcStatus = st
-			if !ok {
-				rpcStatus = status.New(grpcCodes.Internal, rs.Error.Error())
-			}
-		}
-
-		span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int(int(rpcStatus.Code())))
-		if rpcStatus.Code() != grpcCodes.OK {
-			span.SetStatus(codes.Error, rpcStatus.Message())
-			span.RecordError(rpcStatus.Err())
-		}
 
 		span.End()
 	}
