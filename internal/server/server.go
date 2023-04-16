@@ -10,13 +10,11 @@ import (
 	"syscall"
 	"time"
 
-	grpcopenmetrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
-	grpczap "github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	// grpczap "github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2"
+	// "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,6 +24,8 @@ import (
 
 	"github.com/FotiadisM/mock-microservice/pkg/health"
 	"github.com/FotiadisM/mock-microservice/pkg/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/otelgrpc"
+	"github.com/FotiadisM/mock-microservice/pkg/otelgrpc/filters"
 )
 
 type Config struct {
@@ -40,10 +40,9 @@ type Server struct {
 
 	log *zap.Logger
 
-	grpcServer    *grpc.Server
-	httpServer    *http.Server
-	mux           *runtime.ServeMux
-	serverMetrics *grpcopenmetrics.ServerMetrics
+	grpcServer *grpc.Server
+	httpServer *http.Server
+	mux        *runtime.ServeMux
 }
 
 func New(config Config, log *zap.Logger) *Server {
@@ -54,9 +53,9 @@ func New(config Config, log *zap.Logger) *Server {
 }
 
 func (s *Server) Configure(svc healthv1.HealthServer) {
-	loggingOpts := []logging.Option{
-		logging.WithDecider(func(_ string, _ error) logging.Decision { return logging.LogFinishCall }),
-	}
+	// loggingOpts := []logging.Option{
+	// 	logging.WithDecider(func(_ string, _ error) logging.Decision { return logging.LogFinishCall }),
+	// }
 
 	recoveryFunc := recovery.WithRecoveryHandlerContext(func(ctx context.Context, p any) error {
 		log := logger.FromContext(ctx)
@@ -64,27 +63,29 @@ func (s *Server) Configure(svc healthv1.HealthServer) {
 		return status.Error(codes.Internal, "internal server error")
 	})
 
-	s.serverMetrics = grpcopenmetrics.NewServerMetrics()
-
 	usi := []grpc.UnaryServerInterceptor{
-		grpcopenmetrics.UnaryServerInterceptor(s.serverMetrics),
-		logging.UnaryServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
+		// logging.UnaryServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
 		recovery.UnaryServerInterceptor(recoveryFunc),
 		validator.UnaryServerInterceptor(false),
 		logger.UnaryServerInterceptor(s.log),
 	}
 
 	ssi := []grpc.StreamServerInterceptor{
-		grpcopenmetrics.StreamServerInterceptor(s.serverMetrics),
-		logging.StreamServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
+		// logging.StreamServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
 		recovery.StreamServerInterceptor(recoveryFunc),
 		validator.StreamServerInterceptor(false),
 		logger.StreamServerInterceptor(s.log),
 	}
 
+	handler := otelgrpc.ServerStatsHandler(
+		otelgrpc.WithFilter(
+			filters.ServiceName("grpc.reflection.v1alpha.ServerReflection"),
+		),
+	)
 	grpcOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(usi...),
 		grpc.ChainStreamInterceptor(ssi...),
+		grpc.StatsHandler(handler),
 	}
 	s.grpcServer = grpc.NewServer(grpcOpts...)
 
@@ -99,11 +100,6 @@ func (s *Server) Configure(svc healthv1.HealthServer) {
 	}
 
 	s.mux = runtime.NewServeMux(muxOptions...)
-	if err := s.mux.HandlePath(http.MethodGet, "/metrics", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-		promhttp.Handler().ServeHTTP(w, r)
-	}); err != nil {
-		s.log.Fatal("mux.HandlePath() failed", zap.Error(err))
-	}
 
 	s.httpServer = &http.Server{
 		Addr:              s.config.HTTPAddr,
@@ -122,9 +118,6 @@ func (s *Server) Start(ctx context.Context) {
 	if err != nil {
 		s.log.Fatal("failed to create net.Listener", zap.Error(err))
 	}
-
-	// initialize metrics after all services have been registered
-	s.serverMetrics.InitializeMetrics(s.grpcServer)
 
 	s.log.Info("grpc server is listening", zap.String("port", s.config.GRPCAddr))
 	go func() {

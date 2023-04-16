@@ -2,6 +2,7 @@ package servicev1
 
 import (
 	"context"
+	"time"
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store/queries"
@@ -28,6 +29,8 @@ func (s *Service) Register(ctx context.Context, in *authv1.RegisterRequest) (*au
 	}
 
 	log.Info("user info is", zap.String("email", u.Email), zap.String("password", u.Password))
+
+	time.Sleep(time.Second * 2)
 
 	out := &authv1.RegisterResponse{
 		AccessToken:  "1234",

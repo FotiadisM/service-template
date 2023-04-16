@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.18.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -42,21 +42,18 @@ func main() {
 
 	log := logger.New(config.Server.Debug)
 
-	rs, err := resource.New(ctx,
-		resource.WithTelemetrySDK(),
-		resource.WithSchemaURL(semconv.SchemaURL),
-		resource.WithAttributes(
-			semconv.ServiceName("mock-microservice"),
-			semconv.ServiceName("v0.1.0"),
-			semconv.DeploymentEnvironment("development"),
-		),
-	)
+	rs, err := resource.Merge(resource.Default(), resource.NewWithAttributes(semconv.SchemaURL,
+		semconv.ServiceName("mock-microservice"),
+		semconv.ServiceVersion("0.0.1"),
+		semconv.DeploymentEnvironment("dev"),
+	))
 	if err != nil {
 		log.Fatal("failed to create resource", zap.Error(err))
 	}
 
 	te, err := stdouttrace.New(
 		stdouttrace.WithWriter(os.Stdout),
+		stdouttrace.WithPrettyPrint(),
 	)
 	if err != nil {
 		log.Fatal("failed to create trace exporter", zap.Error(err))
@@ -68,7 +65,11 @@ func main() {
 	)
 	otel.SetTracerProvider(tp)
 
-	me, err := stdoutmetric.New(stdoutmetric.WithEncoder(json.NewEncoder(os.Stdout)))
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	me, err := stdoutmetric.New(
+		stdoutmetric.WithEncoder(enc),
+	)
 	if err != nil {
 		log.Fatal("failed to create metrics exporter", zap.Error(err))
 	}

@@ -16,7 +16,6 @@ linters:
     - containedctx
     - contextcheck
     - decorder
-    - dupl
     - dupword
     - durationcheck
     - errchkjson
