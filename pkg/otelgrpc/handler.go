@@ -54,7 +54,7 @@ func (h *statsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) conte
 		attrs: attrs,
 	}
 
-	return ctxWithObserver(ctx, observer)
+	return ctxWithObserver(extract(ctx, h.propagator), observer)
 }
 
 func (h *statsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {

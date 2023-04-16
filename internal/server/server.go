@@ -18,11 +18,9 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
-	"github.com/FotiadisM/mock-microservice/pkg/health"
 	"github.com/FotiadisM/mock-microservice/pkg/logger"
 	"github.com/FotiadisM/mock-microservice/pkg/otelgrpc"
 	"github.com/FotiadisM/mock-microservice/pkg/otelgrpc/filters"
@@ -52,7 +50,7 @@ func New(config Config, log *zap.Logger) *Server {
 	}
 }
 
-func (s *Server) Configure(svc healthv1.HealthServer) {
+func (s *Server) Configure() {
 	// loggingOpts := []logging.Option{
 	// 	logging.WithDecider(func(_ string, _ error) logging.Decision { return logging.LogFinishCall }),
 	// }
@@ -93,13 +91,7 @@ func (s *Server) Configure(svc healthv1.HealthServer) {
 		reflection.Register(s.grpcServer)
 	}
 
-	healthv1.RegisterHealthServer(s.grpcServer, svc)
-
-	muxOptions := []runtime.ServeMuxOption{
-		runtime.WithHealthzEndpoint(health.NewHealthClient(svc)),
-	}
-
-	s.mux = runtime.NewServeMux(muxOptions...)
+	s.mux = runtime.NewServeMux()
 
 	s.httpServer = &http.Server{
 		Addr:              s.config.HTTPAddr,

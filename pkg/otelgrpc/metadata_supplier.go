@@ -34,8 +34,6 @@ func (s *metadataSupplier) Keys() []string {
 	return out
 }
 
-// TODO(FotiadisM): check how it works.
-
 func extract(ctx context.Context, propagators propagation.TextMapPropagator) context.Context {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

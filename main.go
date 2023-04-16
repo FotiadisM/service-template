@@ -18,9 +18,11 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/server"
+	"github.com/FotiadisM/mock-microservice/internal/service/health"
 	servicev1 "github.com/FotiadisM/mock-microservice/internal/service/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"
 	"github.com/FotiadisM/mock-microservice/pkg/logger"
@@ -86,11 +88,13 @@ func main() {
 	}
 
 	svc := servicev1.NewService(store)
+	healthSvc := health.NewService(store)
 
 	server := server.New(config.Server, log)
-	server.Configure(svc)
+	server.Configure()
 	server.RegisterService(func(s *grpc.Server, m *runtime.ServeMux) {
 		authv1.RegisterAuthServiceServer(s, svc)
+		healthv1.RegisterHealthServer(s, healthSvc)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		if err := authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
 			log.Fatal("failed to register server", zap.Error(err))
