@@ -77,7 +77,10 @@ func (s *Server) Configure() {
 
 	handler := otelgrpc.ServerStatsHandler(
 		otelgrpc.WithFilter(
-			filters.ServiceName("grpc.reflection.v1alpha.ServerReflection"),
+			filters.Any(
+				filters.HealthCheck(),
+				filters.ServiceName("grpc.reflection.v1alpha.ServerReflection"),
+			),
 		),
 	)
 	grpcOpts := []grpc.ServerOption{

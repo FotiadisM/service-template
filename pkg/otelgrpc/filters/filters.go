@@ -62,10 +62,10 @@ func Any(fs ...otelgrpc.Filter) otelgrpc.Filter {
 	return func(fullMethodName string) bool {
 		for _, f := range fs {
 			if f(fullMethodName) {
-				return false
+				return true
 			}
 		}
-		return true
+		return false
 	}
 }
 
