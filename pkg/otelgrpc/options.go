@@ -15,7 +15,7 @@ type config struct {
 	errorHandler   otel.ErrorHandler
 }
 
-func newConfig() *config {
+func defaultConfig() *config {
 	return &config{
 		propagator:     otel.GetTextMapPropagator(),
 		tracerProvider: otel.GetTracerProvider(),
@@ -24,44 +24,36 @@ func newConfig() *config {
 	}
 }
 
-type Option interface {
-	apply(c *config)
-}
-
-type optFunc func(c *config)
-
-func (f optFunc) apply(c *config) {
-	f(c)
-}
+type Option func(c *config)
 
 func WithTextMapPropagator(mp propagation.TextMapPropagator) Option {
-	return optFunc(func(c *config) {
+	return func(c *config) {
 		c.propagator = mp
-	})
+	}
 }
 
 func WithTracerProvider(tp trace.TracerProvider) Option {
-	return optFunc(func(c *config) {
+	return func(c *config) {
 		c.tracerProvider = tp
-	})
+	}
 }
 
 func WithMeterProvider(mp metric.MeterProvider) Option {
-	return optFunc(func(c *config) {
+	return func(c *config) {
 		c.meterProvider = mp
-	})
+	}
 }
 
 func WithErrorHandler(eh otel.ErrorHandler) Option {
-	return optFunc(func(c *config) {
+	return func(c *config) {
 		c.errorHandler = eh
-	})
+	}
 }
 
 type Filter func(fullMethodName string) bool
 
 func WithFilter(filter Filter) Option {
-	return optFunc(func(c *config) {
+	return func(c *config) {
 		c.filter = filter
-	})
+	}
 }

@@ -11,9 +11,9 @@ import (
 const instrumentationName = "github.com/FotiadisM/otelgrpc"
 
 func ServerStatsHandler(options ...Option) stats.Handler {
-	config := newConfig()
-	for _, o := range options {
-		o.apply(config)
+	config := defaultConfig()
+	for _, fn := range options {
+		fn(config)
 	}
 
 	tracer := config.tracerProvider.Tracer(
@@ -76,9 +76,9 @@ func ServerStatsHandler(options ...Option) stats.Handler {
 }
 
 func ClientStatsHandler(options ...Option) stats.Handler {
-	config := newConfig()
-	for _, o := range options {
-		o.apply(config)
+	config := defaultConfig()
+	for _, fn := range options {
+		fn(config)
 	}
 
 	tracer := config.tracerProvider.Tracer(
