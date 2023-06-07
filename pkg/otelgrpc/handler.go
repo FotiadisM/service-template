@@ -2,6 +2,7 @@ package otelgrpc
 
 import (
 	"context"
+	"net"
 	"strings"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
@@ -27,11 +27,11 @@ type statsHandler struct {
 	meter        metric.Meter
 	errorHandler otel.ErrorHandler
 
-	duration     instrument.Int64Histogram
-	requestSize  instrument.Int64Histogram
-	responseSize instrument.Int64Histogram
-	requests     instrument.Int64Histogram
-	responses    instrument.Int64Histogram
+	duration     metric.Int64Histogram
+	requestSize  metric.Int64Histogram
+	responseSize metric.Int64Histogram
+	requests     metric.Int64Histogram
+	responses    metric.Int64Histogram
 }
 
 // assert that statsHandler implements the stats.Handler interface.
@@ -67,30 +67,18 @@ func (h *statsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {
 
 	switch rs := rpcStats.(type) {
 	case *stats.InHeader:
-		// TODO(FotiadisM): fix `net.peer.name`
-
-		// host, portStr, err := net.SplitHostPort(rs.LocalAddr.String())
-		// if err != nil {
-		// 	break
-		// }
-
-		// port, err := strconv.Atoi(portStr)
-		// if err != nil {
-		// 	return
-		// }
-
-		// attrs := []attribute.KeyValue{
-		// 	semconv.NetPeerName(host),
-		// 	semconv.NetPeerPort(port),
-		// }
-		// observer.attrs = append(observer.attrs, attrs...)
-		// span.SetAttributes(attrs...)
+		switch addr := rs.RemoteAddr.(type) {
+		case *net.TCPAddr:
+			attr := semconv.NetPeerName(addr.IP.String())
+			observer.attrs = append(observer.attrs, attr)
+			span.SetAttributes(attr)
+		}
 
 	case *stats.Begin:
 		observer.isStreaming = rs.IsClientStream || rs.IsServerStream
 
 	case *stats.InPayload:
-		h.requestSize.Record(ctx, int64(rs.Length), observer.attrs...)
+		h.requestSize.Record(ctx, int64(rs.Length), metric.WithAttributes(observer.attrs...))
 
 		observer.msgReceiveCount++
 		span.AddEvent("message", trace.WithAttributes(
@@ -101,7 +89,7 @@ func (h *statsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {
 		))
 
 	case *stats.OutPayload:
-		h.responseSize.Record(ctx, int64(rs.Length), observer.attrs...)
+		h.responseSize.Record(ctx, int64(rs.Length), metric.WithAttributes(observer.attrs...))
 
 		observer.msgSentCount++
 		span.AddEvent("message", trace.WithAttributes(
@@ -113,30 +101,30 @@ func (h *statsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {
 
 	case *stats.End:
 		rpcCode := grpcCodes.OK
-		rpcMesg := ""
+		rpcMsg := ""
 		if rs.Error != nil {
 			st, ok := status.FromError(rs.Error)
 			if ok {
 				rpcCode = st.Code()
-				rpcMesg = st.Message()
+				rpcMsg = st.Message()
 			} else {
 				rpcCode = grpcCodes.Internal
-				rpcMesg = rs.Error.Error()
+				rpcMsg = rs.Error.Error()
 			}
 		}
 
 		span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
 		observer.attrs = append(observer.attrs, semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
 		if rpcCode != grpcCodes.OK {
-			span.SetStatus(codes.Error, rpcMesg)
+			span.SetStatus(codes.Error, rpcMsg)
 		}
 
 		if observer.isStreaming {
-			h.requests.Record(ctx, int64(observer.msgReceiveCount), observer.attrs...)
-			h.responses.Record(ctx, int64(observer.msgSentCount), observer.attrs...)
+			h.requests.Record(ctx, int64(observer.msgReceiveCount), metric.WithAttributes(observer.attrs...))
+			h.responses.Record(ctx, int64(observer.msgSentCount), metric.WithAttributes(observer.attrs...))
 		} else {
 			duration := rs.EndTime.Sub(rs.BeginTime) / time.Millisecond
-			h.duration.Record(ctx, int64(duration), observer.attrs...)
+			h.duration.Record(ctx, int64(duration), metric.WithAttributes(observer.attrs...))
 		}
 
 		span.End()

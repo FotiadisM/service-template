@@ -17,7 +17,7 @@ func NewService(st store.Store) healthv1.HealthServer {
 	return &service{store: st}
 }
 
-func (s *service) Check(_ context.Context, in *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
+func (s *service) Check(_ context.Context, _ *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
 	res := &healthv1.HealthCheckResponse{
 		Status: healthv1.HealthCheckResponse_SERVING,
 	}
