@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	// PostgreSQL databse driver.
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/FotiadisM/mock-microservice/internal/store/queries"
 	"github.com/FotiadisM/mock-microservice/pkg/logger"
@@ -48,7 +48,7 @@ func New(ctx context.Context, c Config) (Store, error) {
 		str += fmt.Sprintf(" %s=%s", k, v)
 	}
 
-	db, err := sql.Open("postgres", str)
+	db, err := sql.Open("pgx", str)
 	if err != nil {
 		return nil, err
 	}

@@ -2,19 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/sethvargo/go-envconfig"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,10 +15,13 @@ import (
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/server"
-	"github.com/FotiadisM/mock-microservice/internal/service/health"
 	servicev1 "github.com/FotiadisM/mock-microservice/internal/service/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"
+	"github.com/FotiadisM/mock-microservice/pkg/health"
 	"github.com/FotiadisM/mock-microservice/pkg/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/otel"
+
+	"github.com/FotiadisM/mock-microservice/pkg/version"
 )
 
 type Config struct {
@@ -34,6 +30,9 @@ type Config struct {
 }
 
 func main() {
+	version.AddFlag(nil)
+	flag.Parse()
+
 	ctx := context.Background()
 
 	var config Config
@@ -44,43 +43,14 @@ func main() {
 
 	log := logger.New(config.Server.Debug)
 
-	rs, err := resource.Merge(resource.Default(), resource.NewWithAttributes(semconv.SchemaURL,
-		semconv.ServiceName("mock-microservice"),
-		semconv.ServiceVersion("0.0.1"),
-		semconv.DeploymentEnvironment("dev"),
-	))
-	if err != nil {
-		log.Fatal("failed to create resource", zap.Error(err))
-	}
-
-	te, err := stdouttrace.New(
-		stdouttrace.WithWriter(os.Stdout),
-		stdouttrace.WithPrettyPrint(),
+	otel, err := otel.New(ctx,
+		otel.WithErrorHandlerFunc(func(err error) {
+			log.Error("otel error occurred", zap.Error(err))
+		}),
 	)
 	if err != nil {
-		log.Fatal("failed to create trace exporter", zap.Error(err))
+		log.Fatal("failed to initiliaze otel", zap.Error(err))
 	}
-
-	tp := trace.NewTracerProvider(
-		trace.WithResource(rs),
-		trace.WithBatcher(te),
-	)
-	otel.SetTracerProvider(tp)
-
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	me, err := stdoutmetric.New(
-		stdoutmetric.WithEncoder(enc),
-	)
-	if err != nil {
-		log.Fatal("failed to create metrics exporter", zap.Error(err))
-	}
-
-	mp := metric.NewMeterProvider(
-		metric.WithResource(rs),
-		metric.WithReader(metric.NewPeriodicReader(me)),
-	)
-	otel.SetMeterProvider(mp)
 
 	store, err := store.New(ctx, config.Store)
 	if err != nil {
@@ -88,7 +58,7 @@ func main() {
 	}
 
 	svc := servicev1.NewService(store)
-	healthSvc := health.NewService(store)
+	healthSvc := health.NewService(nil, nil, nil)
 
 	server := server.New(config.Server, log)
 	server.Configure()
@@ -96,12 +66,16 @@ func main() {
 		authv1.RegisterAuthServiceServer(s, svc)
 		healthv1.RegisterHealthServer(s, healthSvc)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		if err := authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
+		if err = authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
 			log.Fatal("failed to register server", zap.Error(err))
 		}
 	})
-	server.Start(ctx)
+	server.Start()
+	if err = server.AwaitShutdown(ctx); err != nil {
+		log.Error("server shutdown failed", zap.Error(err))
+	}
 
-	tp.Shutdown(ctx) // nolint:errcheck
-	mp.Shutdown(ctx) // nolint:errcheck
+	if err = otel.Shutdown(ctx); err != nil {
+		log.Error("otel shutdown failed", zap.Error(err))
+	}
 }

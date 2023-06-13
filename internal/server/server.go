@@ -13,7 +13,6 @@ import (
 	// grpczap "github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2"
 	// "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -61,17 +60,19 @@ func (s *Server) Configure() {
 		return status.Error(codes.Internal, "internal server error")
 	})
 
+	// error
+	// log
+	// recover
+
 	usi := []grpc.UnaryServerInterceptor{
 		// logging.UnaryServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
 		recovery.UnaryServerInterceptor(recoveryFunc),
-		validator.UnaryServerInterceptor(false),
 		logger.UnaryServerInterceptor(s.log),
 	}
 
 	ssi := []grpc.StreamServerInterceptor{
 		// logging.StreamServerInterceptor(grpczap.InterceptorLogger(s.log), loggingOpts...),
 		recovery.StreamServerInterceptor(recoveryFunc),
-		validator.StreamServerInterceptor(false),
 		logger.StreamServerInterceptor(s.log),
 	}
 
@@ -108,7 +109,7 @@ func (s *Server) RegisterService(rgFn func(s *grpc.Server, m *runtime.ServeMux))
 	rgFn(s.grpcServer, s.mux)
 }
 
-func (s *Server) Start(ctx context.Context) {
+func (s *Server) Start() {
 	lis, err := net.Listen("tcp", s.config.GRPCAddr)
 	if err != nil {
 		s.log.Fatal("failed to create net.Listener", zap.Error(err))
@@ -129,12 +130,21 @@ func (s *Server) Start(ctx context.Context) {
 			}
 		}
 	}()
+}
 
+func (s *Server) AwaitShutdown(ctx context.Context) error {
 	interruptSignal := make(chan os.Signal, 1)
 	signal.Notify(interruptSignal, syscall.SIGINT, syscall.SIGTERM)
 	<-interruptSignal
 
-	s.httpServer.Shutdown(ctx) //nolint:errcheck
-	s.grpcServer.GracefulStop()
-	lis.Close() //nolint:errcheck
+	errs := make(chan error, 2)
+	go func() {
+		errs <- s.httpServer.Shutdown(ctx)
+	}()
+	go func() {
+		s.grpcServer.GracefulStop()
+		errs <- nil
+	}()
+
+	return errors.Join(<-errs, <-errs)
 }
