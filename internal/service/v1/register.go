@@ -6,9 +6,8 @@ import (
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store/queries"
-	"github.com/FotiadisM/mock-microservice/pkg/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logger"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 func (s *Service) Register(ctx context.Context, in *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {
@@ -28,7 +27,7 @@ func (s *Service) Register(ctx context.Context, in *authv1.RegisterRequest) (*au
 		return nil, err
 	}
 
-	log.Info("user info is", zap.String("email", u.Email), zap.String("password", u.Password))
+	log.Info("user info is", "email", u.Email, "password", u.Password)
 
 	time.Sleep(time.Second * 2)
 

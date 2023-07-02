@@ -8,7 +8,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/sethvargo/go-envconfig"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
@@ -17,12 +17,12 @@ import (
 	"github.com/FotiadisM/mock-microservice/internal/server"
 	servicev1 "github.com/FotiadisM/mock-microservice/internal/service/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"
-	"github.com/FotiadisM/mock-microservice/pkg/health"
-	"github.com/FotiadisM/mock-microservice/pkg/logger"
-	"github.com/FotiadisM/mock-microservice/pkg/otel"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/health"
 
 	"github.com/FotiadisM/mock-microservice/pkg/version"
 )
+
+//go:generate mockery
 
 type Config struct {
 	Store  store.Config
@@ -41,20 +41,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	log := logger.New(config.Server.Debug)
+	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	otel, err := otel.New(ctx,
-		otel.WithErrorHandlerFunc(func(err error) {
-			log.Error("otel error occurred", zap.Error(err))
-		}),
-	)
-	if err != nil {
-		log.Fatal("failed to initiliaze otel", zap.Error(err))
-	}
+	// otel, err := otel.New(ctx,
+	// 	otel.WithErrorHandlerFunc(func(err error) {
+	// 		log.Error("otel error occurred", "err", err.Error())
+	// 	}),
+	// )
+	// if err != nil {
+	// 	log.Error("failed to initiliaze otel", "err", err.Error())
+	// 	os.Exit(1)
+	// }
 
 	store, err := store.New(ctx, config.Store)
 	if err != nil {
-		log.Fatal("failed to create store", zap.Error(err))
+		log.Error("failed to create store", "err", err.Error())
+		os.Exit(1)
 	}
 
 	svc := servicev1.NewService(store)
@@ -67,15 +69,16 @@ func main() {
 		healthv1.RegisterHealthServer(s, healthSvc)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		if err = authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
-			log.Fatal("failed to register server", zap.Error(err))
+			log.Error("failed to register server", "err", err.Error())
+			os.Exit(1)
 		}
 	})
 	server.Start()
 	if err = server.AwaitShutdown(ctx); err != nil {
-		log.Error("server shutdown failed", zap.Error(err))
+		log.Error("server shutdown failed", "err", err.Error())
 	}
 
-	if err = otel.Shutdown(ctx); err != nil {
-		log.Error("otel shutdown failed", zap.Error(err))
-	}
+	// if err = otel.Shutdown(ctx); err != nil {
+	// 	log.Error("otel shutdown failed", "err", err.Error())
+	// }
 }

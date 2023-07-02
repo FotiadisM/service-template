@@ -14,7 +14,7 @@ func DefaultProbeFunc(_ context.Context) (healthv1.HealthCheckResponse_ServingSt
 	return healthv1.HealthCheckResponse_SERVING, nil
 }
 
-type server struct {
+type service struct {
 	readiness ProbeFunc
 	liveness  ProbeFunc
 	startup   ProbeFunc
@@ -32,14 +32,14 @@ func NewService(readiness, liveness, startup ProbeFunc) healthv1.HealthServer {
 	if startup == nil {
 		startup = DefaultProbeFunc
 	}
-	return &server{
+	return &service{
 		readiness: readiness,
 		liveness:  liveness,
 		startup:   startup,
 	}
 }
 
-func (s *server) Check(ctx context.Context, in *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
+func (s *service) Check(ctx context.Context, in *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
 	var f ProbeFunc
 	switch in.Service {
 	case "readiness":
@@ -54,15 +54,8 @@ func (s *server) Check(ctx context.Context, in *healthv1.HealthCheckRequest) (*h
 
 	st, err := f(ctx)
 	if err != nil {
-		return nil, checkErr(err)
+		return nil, err
 	}
-	return &healthv1.HealthCheckResponse{Status: st}, nil
-}
 
-func checkErr(err error) error {
-	_, ok := status.FromError(err)
-	if ok {
-		return err
-	}
-	return status.Error(codes.Internal, err.Error())
+	return &healthv1.HealthCheckResponse{Status: st}, nil
 }

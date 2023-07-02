@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -18,8 +19,23 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func TraceAttributes(ctx context.Context) (traceID string, attrs []attribute.KeyValue, ok bool) {
+	sc := trace.SpanContextFromContext(ctx)
+	t := sc.TraceID()
+	if !t.IsValid() {
+		return "", nil, false
+	}
+
+	observer := observerFromCtx(ctx)
+	if observer.attrs == nil || observer.skip {
+		return "", nil, false
+	}
+
+	return t.String(), observer.attrs, ok
+}
+
 type statsHandler struct {
-	filter   Filter
+	filter   filter.Filter
 	spanKind trace.SpanKind
 
 	propagator   propagation.TextMapPropagator

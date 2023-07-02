@@ -3,7 +3,7 @@ package servicev1
 import (
 	"context"
 
-	"github.com/FotiadisM/mock-microservice/pkg/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logger"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

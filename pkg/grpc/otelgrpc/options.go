@@ -1,6 +1,7 @@
 package otelgrpc
 
 import (
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
@@ -8,7 +9,7 @@ import (
 )
 
 type config struct {
-	filter         Filter
+	filter         filter.Filter
 	propagator     propagation.TextMapPropagator
 	tracerProvider trace.TracerProvider
 	meterProvider  metric.MeterProvider
@@ -50,9 +51,7 @@ func WithErrorHandler(eh otel.ErrorHandler) Option {
 	}
 }
 
-type Filter func(fullMethodName string) bool
-
-func WithFilter(filter Filter) Option {
+func WithFilter(filter filter.Filter) Option {
 	return func(c *config) {
 		c.filter = filter
 	}

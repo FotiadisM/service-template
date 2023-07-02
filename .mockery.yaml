@@ -1,0 +1,8 @@
+with-expecter: true
+dir: "{{.InterfaceDir}}/mock"
+filename: "{{.InterfaceNameSnake}}.go"
+outpkg: "mock"
+packages:
+  github.com/FotiadisM/mock-microservice/internal/store:
+    interfaces:
+      Store:

@@ -1,53 +1,53 @@
-package filters
+package filter
 
 import (
 	"strings"
-
-	"github.com/FotiadisM/mock-microservice/pkg/otelgrpc"
 )
 
-func FullMethodName(s string) otelgrpc.Filter {
+type Filter func(fullMethodName string) bool
+
+func FullMethodName(s string) Filter {
 	return func(fullMethodName string) bool {
 		return s == fullMethodName
 	}
 }
 
-func MethodName(s string) otelgrpc.Filter {
+func MethodName(s string) Filter {
 	return func(fullMethodName string) bool {
 		_, m := ParseFullMethodName(fullMethodName)
 		return s == m
 	}
 }
 
-func MethodPrefix(pre string) otelgrpc.Filter {
+func MethodPrefix(pre string) Filter {
 	return func(fullMethodName string) bool {
 		_, m := ParseFullMethodName(fullMethodName)
 		return strings.HasPrefix(m, pre)
 	}
 }
 
-func ServiceName(s string) otelgrpc.Filter {
+func ServiceName(s string) Filter {
 	return func(fullMethodName string) bool {
 		svc, _ := ParseFullMethodName(fullMethodName)
 		return s == svc
 	}
 }
 
-func ServicePrfix(pre string) otelgrpc.Filter {
+func ServicePrfix(pre string) Filter {
 	return func(fullMethodName string) bool {
 		svc, _ := ParseFullMethodName(fullMethodName)
 		return strings.HasPrefix(svc, pre)
 	}
 }
 
-func HealthCheck() otelgrpc.Filter {
+func HealthCheck() Filter {
 	return func(fullMethodName string) bool {
 		svc, _ := ParseFullMethodName(fullMethodName)
 		return svc == "grpc.health.v1.Health"
 	}
 }
 
-func All(fs ...otelgrpc.Filter) otelgrpc.Filter {
+func All(fs ...Filter) Filter {
 	return func(fullMethodName string) bool {
 		for _, f := range fs {
 			if !f(fullMethodName) {
@@ -58,7 +58,7 @@ func All(fs ...otelgrpc.Filter) otelgrpc.Filter {
 	}
 }
 
-func Any(fs ...otelgrpc.Filter) otelgrpc.Filter {
+func Any(fs ...Filter) Filter {
 	return func(fullMethodName string) bool {
 		for _, f := range fs {
 			if f(fullMethodName) {
@@ -69,11 +69,11 @@ func Any(fs ...otelgrpc.Filter) otelgrpc.Filter {
 	}
 }
 
-func None(fs ...otelgrpc.Filter) otelgrpc.Filter {
+func None(fs ...Filter) Filter {
 	return Not(Any(fs...))
 }
 
-func Not(f otelgrpc.Filter) otelgrpc.Filter {
+func Not(f Filter) Filter {
 	return func(fullMethodName string) bool {
 		return !f(fullMethodName)
 	}
