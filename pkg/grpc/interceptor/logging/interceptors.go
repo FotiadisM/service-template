@@ -1,57 +1,15 @@
-package logger
+package logging
 
 import (
 	"context"
-	"os"
 	"strings"
 
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-type handler struct {
-	slog.Handler
-}
-
-func NewHandler() slog.Handler {
-	h := slog.NewJSONHandler(os.Stdout, nil)
-	return handler{h}
-}
-
-type ctxKey struct{}
-
-func ContextWithLogger(ctx context.Context, logger *slog.Logger) context.Context {
-	return context.WithValue(ctx, ctxKey{}, logger)
-}
-
-func FromContext(ctx context.Context) *slog.Logger {
-	if l, ok := ctx.Value(ctxKey{}).(*slog.Logger); ok {
-		return l
-	}
-
-	return slog.Default()
-}
-
-// DefaultServerCodeToLevel is the helper mapper that maps gRPC return codes to log levels for server side.
-func DefaultServerCodeToLevel(code codes.Code) slog.Level {
-	switch code {
-	case codes.OK, codes.NotFound, codes.Canceled, codes.AlreadyExists, codes.InvalidArgument, codes.Unauthenticated:
-		return slog.LevelInfo
-
-	case codes.DeadlineExceeded, codes.PermissionDenied, codes.ResourceExhausted, codes.FailedPrecondition, codes.Aborted,
-		codes.OutOfRange, codes.Unavailable:
-		return slog.LevelWarn
-
-	case codes.Unknown, codes.Unimplemented, codes.Internal, codes.DataLoss:
-		return slog.LevelError
-
-	default:
-		return slog.LevelError
-	}
-}
 
 func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServerInterceptor {
 	options := defaultOptions()
@@ -72,7 +30,7 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 		fullName := strings.TrimLeft(info.FullMethod, "/")
 		parts := strings.Split(fullName, "/")
 		if len(parts) != 2 {
-			ctx = ContextWithLogger(ctx, logger)
+			ctx = ilog.ContextWithLogger(ctx, logger)
 			return handler(ctx, req)
 		}
 
@@ -81,7 +39,7 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 			"rpc.method", parts[1],
 		)
 
-		ctx = ContextWithLogger(ctx, logger)
+		ctx = ilog.ContextWithLogger(ctx, logger)
 		res, err := handler(ctx, req)
 
 		st := status.Convert(err)
@@ -139,7 +97,7 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 		fullName := strings.TrimLeft(info.FullMethod, "/")
 		parts := strings.Split(fullName, "/")
 		if len(parts) != 2 {
-			ws.WrappedContext = ContextWithLogger(ctx, logger)
+			ws.WrappedContext = ilog.ContextWithLogger(ctx, logger)
 			return handler(srv, ss)
 		}
 
@@ -148,7 +106,7 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 			"rpc.method", parts[1],
 		)
 
-		ws.WrappedContext = ContextWithLogger(ctx, logger)
+		ws.WrappedContext = ilog.ContextWithLogger(ctx, logger)
 		err := handler(srv, ss)
 
 		st := status.Convert(err)

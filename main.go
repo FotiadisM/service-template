@@ -13,11 +13,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
+	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/server"
 	servicev1 "github.com/FotiadisM/mock-microservice/internal/service/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/health"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 
 	"github.com/FotiadisM/mock-microservice/pkg/version"
 )
@@ -45,17 +46,17 @@ func main() {
 
 	// otel, err := otel.New(ctx,
 	// 	otel.WithErrorHandlerFunc(func(err error) {
-	// 		log.Error("otel error occurred", "err", err.Error())
+	// 		log.Error("otel error occurred", "error", err.Error())
 	// 	}),
 	// )
 	// if err != nil {
-	// 	log.Error("failed to initiliaze otel", "err", err.Error())
+	// 	log.Error("failed to initiliaze otel", "error", err.Error())
 	// 	os.Exit(1)
 	// }
 
-	store, err := store.New(ctx, config.Store)
+	store, err := store.New(config.Store)
 	if err != nil {
-		log.Error("failed to create store", "err", err.Error())
+		log.Error("failed to create store", ilog.Err(err))
 		os.Exit(1)
 	}
 
@@ -63,22 +64,21 @@ func main() {
 	healthSvc := health.NewService(nil, nil, nil)
 
 	server := server.New(config.Server, log)
-	server.Configure()
 	server.RegisterService(func(s *grpc.Server, m *runtime.ServeMux) {
 		authv1.RegisterAuthServiceServer(s, svc)
 		healthv1.RegisterHealthServer(s, healthSvc)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		if err = authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
-			log.Error("failed to register server", "err", err.Error())
+			log.Error("failed to register server", ilog.Err(err))
 			os.Exit(1)
 		}
 	})
 	server.Start()
 	if err = server.AwaitShutdown(ctx); err != nil {
-		log.Error("server shutdown failed", "err", err.Error())
+		log.Error("server shutdown failed", ilog.Err(err))
 	}
 
 	// if err = otel.Shutdown(ctx); err != nil {
-	// 	log.Error("otel shutdown failed", "err", err.Error())
+	// 	log.Error("otel shutdown failed", "erroor", err.Error())
 	// }
 }

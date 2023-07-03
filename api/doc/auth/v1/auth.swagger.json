@@ -55,8 +55,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {}
+              "$ref": "#/definitions/v1LogoutResponse"
             }
           },
           "default": {
@@ -159,6 +158,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }
@@ -185,6 +185,9 @@
           "type": "string"
         }
       }
+    },
+    "v1LogoutResponse": {
+      "type": "object"
     },
     "v1RefreshTokenRequest": {
       "type": "object",

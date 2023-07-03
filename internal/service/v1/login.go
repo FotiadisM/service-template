@@ -3,7 +3,7 @@ package servicev1
 import (
 	"context"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
+	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/errors"
 	"google.golang.org/grpc/codes"
 )

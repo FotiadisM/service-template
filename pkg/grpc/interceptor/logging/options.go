@@ -1,4 +1,4 @@
-package logger
+package logging
 
 import (
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"

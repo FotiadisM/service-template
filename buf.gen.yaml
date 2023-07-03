@@ -7,16 +7,16 @@ managed:
       - buf.build/googleapis/googleapis
 plugins:
   - name: go
-    out: api
+    out: api/go
     opt:
       - paths=source_relative
   - name: go-grpc
-    out: api
+    out: api/go
     opt:
       - paths=source_relative
   - name: grpc-gateway
-    out: api
+    out: api/go
     opt:
       - paths=source_relative
   - name: openapiv2
-    out: api
+    out: api/doc

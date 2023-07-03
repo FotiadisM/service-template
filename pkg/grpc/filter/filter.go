@@ -14,35 +14,35 @@ func FullMethodName(s string) Filter {
 
 func MethodName(s string) Filter {
 	return func(fullMethodName string) bool {
-		_, m := ParseFullMethodName(fullMethodName)
+		_, m := parseFullMethodName(fullMethodName)
 		return s == m
 	}
 }
 
 func MethodPrefix(pre string) Filter {
 	return func(fullMethodName string) bool {
-		_, m := ParseFullMethodName(fullMethodName)
+		_, m := parseFullMethodName(fullMethodName)
 		return strings.HasPrefix(m, pre)
 	}
 }
 
 func ServiceName(s string) Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := ParseFullMethodName(fullMethodName)
+		svc, _ := parseFullMethodName(fullMethodName)
 		return s == svc
 	}
 }
 
 func ServicePrfix(pre string) Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := ParseFullMethodName(fullMethodName)
+		svc, _ := parseFullMethodName(fullMethodName)
 		return strings.HasPrefix(svc, pre)
 	}
 }
 
 func HealthCheck() Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := ParseFullMethodName(fullMethodName)
+		svc, _ := parseFullMethodName(fullMethodName)
 		return svc == "grpc.health.v1.Health"
 	}
 }
@@ -79,9 +79,8 @@ func Not(f Filter) Filter {
 	}
 }
 
-func ParseFullMethodName(s string) (service, method string) {
-	name := strings.TrimLeft(s, "/")
-	parts := strings.SplitN(name, "/", 2)
+func parseFullMethodName(s string) (service, method string) {
+	parts := strings.SplitN(strings.TrimLeft(s, "/"), "/", 2)
 	if len(parts) != 2 {
 		return "", ""
 	}

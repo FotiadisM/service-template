@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/sethvargo/go-envconfig v0.9.0

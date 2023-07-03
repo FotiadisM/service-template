@@ -59,3 +59,26 @@ func (s *service) Check(ctx context.Context, in *healthv1.HealthCheckRequest) (*
 
 	return &healthv1.HealthCheckResponse{Status: st}, nil
 }
+
+func (s *service) Watch(in *healthv1.HealthCheckRequest, ws healthv1.Health_WatchServer) error {
+	ctx := ws.Context()
+
+	var f ProbeFunc
+	switch in.Service {
+	case "readiness":
+		f = s.readiness
+	case "liveness":
+		f = s.liveness
+	case "startup":
+		f = s.startup
+	default:
+		return status.Error(codes.NotFound, "unknown probe")
+	}
+
+	st, err := f(ctx)
+	if err != nil {
+		return err
+	}
+
+	return ws.Send(&healthv1.HealthCheckResponse{Status: st})
+}

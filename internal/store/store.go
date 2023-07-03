@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/FotiadisM/mock-microservice/internal/store/queries"
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
 type TxFn func(store Store) (err error)
@@ -39,9 +40,9 @@ type store struct {
 	*queries.Queries
 }
 
-func New(ctx context.Context, c Config) (Store, error) {
-	str := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", c.Host, c.Port, c.Username, c.Password, c.Database)
-	for k, v := range c.Params {
+func New(cfg Config) (Store, error) {
+	str := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database)
+	for k, v := range cfg.Params {
 		str += fmt.Sprintf(" %s=%s", k, v)
 	}
 
@@ -50,18 +51,14 @@ func New(ctx context.Context, c Config) (Store, error) {
 		return nil, err
 	}
 
-	if c.MaxOpenConns > 0 {
-		db.SetMaxOpenConns(c.MaxOpenConns)
+	if cfg.MaxOpenConns > 0 {
+		db.SetMaxOpenConns(cfg.MaxOpenConns)
 	}
-	if c.MaxIdleConns > 0 {
-		db.SetMaxIdleConns(c.MaxIdleConns)
+	if cfg.MaxIdleConns > 0 {
+		db.SetMaxIdleConns(cfg.MaxIdleConns)
 	}
-	if c.ConnMaxLifetime > 0 {
-		db.SetConnMaxLifetime(c.ConnMaxLifetime)
-	}
-
-	if err := db.PingContext(ctx); err != nil {
-		return nil, err
+	if cfg.ConnMaxLifetime > 0 {
+		db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 	}
 
 	store := &store{
@@ -81,32 +78,22 @@ func (s *store) WithTx(ctx context.Context, fn TxFn) error {
 }
 
 func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error {
-	log := logger.FromContext(ctx)
+	log := ilog.FromContext(ctx)
 
 	tx, err := s.DB.BeginTx(ctx, options)
 	if err != nil {
-		log.Error("failed to start transaction", "err", err.Error())
+		log.Error("failed to begin transaction", ilog.Err(err))
 		return err
 	}
 
 	defer func() {
 		p := recover()
 		if p != nil {
-			log.Info("recovered from panic, rolling back transaction and panicking again")
-
+			log.Error("recovered from panic, rolling back transaction and panicking again")
 			if txErr := tx.Rollback(); txErr != nil {
-				log.Error("failed to roll back transaction", "err", err.Error())
+				log.Error("failed to roll back transaction", ilog.Err(err))
 			}
-
 			panic(p)
-		}
-		if err != nil {
-			if txErr := tx.Rollback(); txErr != nil {
-				log.Error("failed to roll back transaction", "err", err.Error())
-			}
-		}
-		if err = tx.Commit(); err != nil {
-			log.Error("failed to commit transaction", "err", err.Error())
 		}
 	}()
 
@@ -114,6 +101,16 @@ func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn
 		DB:      nil,
 		Queries: s.Queries.WithTx(tx),
 	})
+	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to roll back transaction: %w", txErr))
+		}
+		return err
+	}
 
-	return err
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }

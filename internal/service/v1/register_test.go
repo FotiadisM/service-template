@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
+	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
 	mockStore "github.com/FotiadisM/mock-microservice/internal/store/mock"
 	"github.com/FotiadisM/mock-microservice/internal/store/queries"
 	"github.com/stretchr/testify/mock"

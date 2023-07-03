@@ -3,14 +3,13 @@ package servicev1
 import (
 	"context"
 
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logger"
-	"google.golang.org/protobuf/types/known/emptypb"
+	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
-func (s *Service) Logout(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
-	log := logger.FromContext(ctx)
+func (s *Service) Logout(ctx context.Context, _ *authv1.LogoutRequest) (*authv1.LogoutResponse, error) {
+	log := ilog.FromContext(ctx)
 	log.Info("HELLO")
 
-	out := &emptypb.Empty{}
-	return out, nil
+	return &authv1.LogoutResponse{}, nil
 }

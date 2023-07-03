@@ -10,15 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logging"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/recovery"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/otelgrpc"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
 type Config struct {
@@ -39,28 +40,19 @@ type Server struct {
 }
 
 func New(config Config, log *slog.Logger) *Server {
-	return &Server{
+	s := &Server{
 		config: config,
 		log:    log,
 	}
-}
-
-func (s *Server) Configure() {
-	// recoveryFunc := recovery.WithRecoveryHandlerContext(func(ctx context.Context, p any) error {
-	// 	log := logger.FromContext(ctx)
-	// 	log.LogAttrs(ctx, slog.LevelError, "PANIC", slog.Any("trace", p))
-	// 	return status.Error(codes.Internal, "internal server error")
-	// })
 
 	usi := []grpc.UnaryServerInterceptor{
-		logger.UnaryServerInterceptor(s.log),
+		logging.UnaryServerInterceptor(s.log),
 		recovery.UnaryServerInterceptor(),
 	}
 
 	ssi := []grpc.StreamServerInterceptor{
-		logger.StreamServerInterceptor(s.log),
+		logging.StreamServerInterceptor(s.log),
 		recovery.StreamServerInterceptor(),
-		// logger.StreamServerInterceptor(s.log),
 	}
 
 	handler := otelgrpc.ServerStatsHandler(
@@ -71,6 +63,7 @@ func (s *Server) Configure() {
 			),
 		),
 	)
+
 	grpcOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(usi...),
 		grpc.ChainStreamInterceptor(ssi...),
@@ -90,6 +83,8 @@ func (s *Server) Configure() {
 		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
+
+	return s
 }
 
 func (s *Server) RegisterService(rgFn func(s *grpc.Server, m *runtime.ServeMux)) {
@@ -99,14 +94,14 @@ func (s *Server) RegisterService(rgFn func(s *grpc.Server, m *runtime.ServeMux))
 func (s *Server) Start() {
 	lis, err := net.Listen("tcp", s.config.GRPCAddr)
 	if err != nil {
-		s.log.Error("failed to create net.Listener", "err", err.Error())
+		s.log.Error("failed to create net.Listener", ilog.Err(err))
 		os.Exit(1)
 	}
 
 	s.log.Info("grpc server is listening", "port", s.config.GRPCAddr)
 	go func() {
 		if err := s.grpcServer.Serve(lis); err != nil {
-			s.log.Error("grpc serve failed", "err", err.Error())
+			s.log.Error("grpc serve failed", ilog.Err(err))
 			os.Exit(1)
 		}
 	}()
@@ -115,7 +110,7 @@ func (s *Server) Start() {
 	go func() {
 		if err := s.httpServer.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				s.log.Error("http listen and serve failed", "err", err.Error())
+				s.log.Error("http listen and serve failed", ilog.Err(err))
 				os.Exit(1)
 			}
 		}

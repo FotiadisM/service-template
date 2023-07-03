@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/auth/v1"
+	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store/queries"
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logger"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"github.com/google/uuid"
 )
 
 func (s *Service) Register(ctx context.Context, in *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {
-	log := logger.FromContext(ctx)
+	log := ilog.FromContext(ctx)
 
 	id, err := uuid.NewRandom()
 	if err != nil {
