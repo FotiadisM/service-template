@@ -9,11 +9,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewDetailsError(code codes.Code, reason, msg string) error {
+func NewInfoError(code codes.Code, reason, msg string, md map[string]string) error {
 	st := status.New(code, msg)
 	st, err := st.WithDetails(&errdetails.ErrorInfo{
-		Reason: reason,
-		Domain: version.ModulePath,
+		Reason:   reason,
+		Domain:   version.ModulePath,
+		Metadata: md,
 	})
 	if err != nil {
 		// If this errored, it will always error

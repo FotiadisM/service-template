@@ -1,7 +1,8 @@
 package logging
 
 import (
-	"golang.org/x/exp/slog"
+	"log/slog"
+
 	"google.golang.org/grpc/codes"
 )
 

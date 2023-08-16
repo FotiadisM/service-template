@@ -4,11 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/sethvargo/go-envconfig"
-	"golang.org/x/exp/slog"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
@@ -42,17 +43,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	log := slog.New(ilog.NewHandler(nil))
 
-	// otel, err := otel.New(ctx,
-	// 	otel.WithErrorHandlerFunc(func(err error) {
-	// 		log.Error("otel error occurred", "error", err.Error())
-	// 	}),
-	// )
-	// if err != nil {
-	// 	log.Error("failed to initiliaze otel", "error", err.Error())
-	// 	os.Exit(1)
-	// }
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
+		log.Error("received otel error", ilog.Err(err))
+	}))
 
 	store, err := store.New(config.Store)
 	if err != nil {
@@ -74,11 +69,7 @@ func main() {
 		}
 	})
 	server.Start()
-	if err = server.AwaitShutdown(ctx); err != nil {
+	if err = server.GracefulStop(); err != nil {
 		log.Error("server shutdown failed", ilog.Err(err))
 	}
-
-	// if err = otel.Shutdown(ctx); err != nil {
-	// 	log.Error("otel shutdown failed", "erroor", err.Error())
-	// }
 }

@@ -10,7 +10,7 @@ type options struct {
 
 func defaultOptions() *options {
 	return &options{
-		recoveryFn: nil,
+		recoveryFn: DefaultRecoveryFunc,
 	}
 }
 

@@ -5,4 +5,4 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-var ErrEmailExists = errors.NewDetailsError(codes.AlreadyExists, "EMAIL_NOT_UNIQUE", "the email provided is already in use")
+var ErrEmailExists = errors.NewInfoError(codes.AlreadyExists, "EMAIL_NOT_UNIQUE", "the email provided is already in use", nil)

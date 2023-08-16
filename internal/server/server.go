@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"golang.org/x/exp/slog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -20,6 +20,20 @@ import (
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/recovery"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/otelgrpc"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
+)
+
+var (
+	// DefaultReadTimeout sets the maximum time a client has to fully stream a request (5s).
+	DefaultReadTimeout = 5 * time.Second
+	// DefaultWriteTimeout sets the maximum amount of time a handler has to fully process a request (10s).
+	DefaultWriteTimeout = 10 * time.Second
+	// DefaultIdleTimeout sets the maximum amount of time a Keep-Alive connection can remain idle before
+	// being recycled (120s).
+	DefaultIdleTimeout = 120 * time.Second
+	// DefaultReadHeaderTimeout sets the maximum amount of time a client has to fully stream a request header (5s).
+	DefaultReadHeaderTimeout = DefaultReadTimeout
+	// DefaultShutdownTimeout defines how long Graceful will wait before forcibly shutting down.
+	DefaultShutdownTimeout = 5 * time.Second
 )
 
 type Config struct {
@@ -80,8 +94,10 @@ func New(config Config, log *slog.Logger) *Server {
 	s.httpServer = &http.Server{
 		Addr:              s.config.HTTPAddr,
 		Handler:           s.mux,
-		ReadTimeout:       5 * time.Second,
-		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       DefaultReadTimeout,
+		ReadHeaderTimeout: DefaultReadHeaderTimeout,
+		WriteTimeout:      DefaultWriteTimeout,
+		IdleTimeout:       DefaultIdleTimeout,
 	}
 
 	return s
@@ -100,7 +116,8 @@ func (s *Server) Start() {
 
 	s.log.Info("grpc server is listening", "port", s.config.GRPCAddr)
 	go func() {
-		if err := s.grpcServer.Serve(lis); err != nil {
+		err := s.grpcServer.Serve(lis)
+		if err != nil {
 			s.log.Error("grpc serve failed", ilog.Err(err))
 			os.Exit(1)
 		}
@@ -108,23 +125,32 @@ func (s *Server) Start() {
 
 	s.log.Info("http server is listening", "port", s.config.HTTPAddr)
 	go func() {
-		if err := s.httpServer.ListenAndServe(); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
-				s.log.Error("http listen and serve failed", ilog.Err(err))
-				os.Exit(1)
-			}
+		err := s.httpServer.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			s.log.Error("http listen and serve failed", ilog.Err(err))
+			os.Exit(1)
 		}
 	}()
 }
 
-func (s *Server) AwaitShutdown(ctx context.Context) error {
+func (s *Server) GracefulStop() error {
+	return s.GracefulStopContext(context.Background())
+}
+
+func (s *Server) GracefulStopContext(ctx context.Context) error {
 	interruptSignal := make(chan os.Signal, 1)
-	signal.Notify(interruptSignal, syscall.SIGINT, syscall.SIGTERM)
-	<-interruptSignal
+	signal.Notify(interruptSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case <-ctx.Done():
+	case <-interruptSignal:
+	}
 
 	errs := make(chan error, 2)
 	go func() {
-		errs <- s.httpServer.Shutdown(ctx)
+		timer, cancel := context.WithTimeout(context.Background(), DefaultShutdownTimeout)
+		defer cancel()
+		errs <- s.httpServer.Shutdown(timer)
 	}()
 	go func() {
 		s.grpcServer.GracefulStop()

@@ -2,11 +2,13 @@ package logging
 
 import (
 	"context"
+	"log/slog"
+	"strconv"
 	"strings"
 
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/slog"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -45,6 +47,34 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 		st := status.Convert(err)
 		if err != nil {
 			logger = logger.With("error", st.Message())
+		}
+
+		for _, detail := range st.Details() {
+			switch t := detail.(type) {
+			case *errdetails.BadRequest:
+				attrs := []slog.Attr{}
+				for i, fv := range t.FieldViolations {
+					attrs = append(attrs, slog.Group(strconv.Itoa(i),
+						slog.String("field", fv.Field),
+						slog.String("description", fv.Description),
+					))
+				}
+				logger = logger.With(attrs)
+			case *errdetails.DebugInfo:
+			case *errdetails.ErrorInfo:
+				md := []slog.Attr{}
+				for k, v := range t.Metadata {
+					md = append(md, slog.String(k, v))
+				}
+				logger = logger.With(slog.Group(
+					"error_info",
+					slog.String("reason", t.Reason),
+					slog.String("domain", t.Domain),
+					slog.Group("metadata", md),
+				))
+			case *errdetails.PreconditionFailure:
+			case *errdetails.RequestInfo:
+			}
 		}
 
 		lvl := options.levelFunc(st.Code())

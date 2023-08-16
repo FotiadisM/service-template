@@ -2,9 +2,8 @@ package ilog
 
 import (
 	"context"
+	"log/slog"
 	"os"
-
-	"golang.org/x/exp/slog"
 )
 
 func Err(err error) slog.Attr {
@@ -28,19 +27,9 @@ func (h *handler) Handle(ctx context.Context, r slog.Record) error {
 	return h.Handler.Handle(ctx, r)
 }
 
-type Option func(*handler)
-
-func WithContextKeys(keys ...any) Option {
-	return func(h *handler) {
-		if len(keys) > 0 {
-			h.ctxKeys = keys
-		}
-	}
-}
-
-func NewHandler(opts ...Option) slog.Handler {
+func NewHandler(ho *slog.HandlerOptions, opts ...Option) slog.Handler {
 	h := &handler{
-		Handler: slog.NewJSONHandler(os.Stdout, nil),
+		Handler: slog.NewJSONHandler(os.Stdout, ho),
 		ctxKeys: []any{},
 	}
 
@@ -49,18 +38,4 @@ func NewHandler(opts ...Option) slog.Handler {
 	}
 
 	return h
-}
-
-type ctxKey struct{}
-
-func ContextWithLogger(ctx context.Context, logger *slog.Logger) context.Context {
-	return context.WithValue(ctx, ctxKey{}, logger)
-}
-
-func FromContext(ctx context.Context) *slog.Logger {
-	if l, ok := ctx.Value(ctxKey{}).(*slog.Logger); ok {
-		return l
-	}
-
-	return slog.Default()
 }

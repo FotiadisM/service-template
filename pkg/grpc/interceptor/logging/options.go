@@ -1,8 +1,9 @@
 package logging
 
 import (
+	"log/slog"
+
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
-	"golang.org/x/exp/slog"
 	"google.golang.org/grpc/codes"
 )
 
@@ -16,6 +17,7 @@ type options struct {
 func defaultOptions() *options {
 	return &options{
 		levelFunc: DefaultServerCodeToLevel,
+		filter:    filter.Any(),
 	}
 }
 

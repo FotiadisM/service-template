@@ -87,8 +87,7 @@ func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn
 	}
 
 	defer func() {
-		p := recover()
-		if p != nil {
+		if p := recover(); p != nil {
 			log.Error("recovered from panic, rolling back transaction and panicking again")
 			if txErr := tx.Rollback(); txErr != nil {
 				log.Error("failed to roll back transaction", ilog.Err(err))
@@ -98,7 +97,7 @@ func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn
 	}()
 
 	err = fn(&store{
-		DB:      nil,
+		DB:      s.DB,
 		Queries: s.Queries.WithTx(tx),
 	})
 	if err != nil {

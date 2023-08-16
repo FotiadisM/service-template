@@ -11,5 +11,5 @@ func (s *Service) Logout(ctx context.Context, _ *authv1.LogoutRequest) (*authv1.
 	log := ilog.FromContext(ctx)
 	log.Info("HELLO")
 
-	return &authv1.LogoutResponse{}, nil
+	panic("oh no this is terrible")
 }
