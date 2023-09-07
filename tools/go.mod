@@ -3,7 +3,7 @@ module tools
 go 1.20
 
 require (
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.17.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.17.1
 	github.com/kyleconroy/sqlc v1.18.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0
 	google.golang.org/protobuf v1.31.0
