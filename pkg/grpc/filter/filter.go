@@ -47,6 +47,13 @@ func HealthCheck() Filter {
 	}
 }
 
+func Reflection() Filter {
+	return func(fullMethodName string) bool {
+		svc, _ := parseFullMethodName(fullMethodName)
+		return (svc == "grpc.reflection.v1.ServerReflection" || svc == "grpc.reflection.v1alpha.ServerReflection")
+	}
+}
+
 func All(fs ...Filter) Filter {
 	return func(fullMethodName string) bool {
 		for _, f := range fs {

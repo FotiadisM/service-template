@@ -72,8 +72,8 @@ func New(config Config, log *slog.Logger) *Server {
 	handler := otelgrpc.ServerStatsHandler(
 		otelgrpc.WithFilter(
 			filter.Any(
+				filter.Reflection(),
 				filter.HealthCheck(),
-				filter.ServiceName("grpc.reflection.v1alpha.ServerReflection"),
 			),
 		),
 	)
