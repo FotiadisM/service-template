@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bufbuild/protovalidate-go"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -18,6 +19,7 @@ import (
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logging"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/recovery"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/validate"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/otelgrpc"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
@@ -59,14 +61,21 @@ func New(config Config, log *slog.Logger) *Server {
 		log:    log,
 	}
 
+	validator, err := protovalidate.New()
+	if err != nil {
+		panic(err)
+	}
+
 	usi := []grpc.UnaryServerInterceptor{
-		logging.UnaryServerInterceptor(s.log),
+		logging.UnaryServerInterceptor(s.log, logging.WithFilter(filter.Any(filter.Reflection(), filter.HealthCheck()))),
 		recovery.UnaryServerInterceptor(),
+		validate.UnaryServerInterceptor(validator),
 	}
 
 	ssi := []grpc.StreamServerInterceptor{
-		logging.StreamServerInterceptor(s.log),
+		logging.StreamServerInterceptor(s.log, logging.WithFilter(filter.Any(filter.Reflection(), filter.HealthCheck()))),
 		recovery.StreamServerInterceptor(),
+		validate.StreamServerInterceptor(validator),
 	}
 
 	handler := otelgrpc.ServerStatsHandler(

@@ -26,7 +26,7 @@ func NewInfoError(code codes.Code, reason, msg string, md map[string]string) err
 	return st.Err()
 }
 
-func NewBadRequestError(code codes.Code, msg string, fv ...*errdetails.BadRequest_FieldViolation) error {
+func NewBadRequestError(code codes.Code, msg string, fv []*errdetails.BadRequest_FieldViolation) error {
 	st := status.New(code, msg)
 	if len(fv) == 0 {
 		return st.Err()

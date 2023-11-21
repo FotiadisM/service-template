@@ -59,7 +59,7 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 						slog.String("description", fv.Description),
 					))
 				}
-				logger = logger.With(attrs)
+				logger = logger.With("violations", attrs)
 			case *errdetails.DebugInfo:
 			case *errdetails.ErrorInfo:
 				md := []slog.Attr{}
@@ -68,9 +68,9 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 				}
 				logger = logger.With(slog.Group(
 					"error_info",
-					slog.String("reason", t.Reason),
-					slog.String("domain", t.Domain),
-					slog.Group("metadata", md),
+					"reason", t.Reason,
+					"domain", t.Domain,
+					"metadata", md,
 				))
 			case *errdetails.PreconditionFailure:
 			case *errdetails.RequestInfo:
@@ -137,7 +137,7 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 		)
 
 		ws.WrappedContext = ilog.ContextWithLogger(ctx, logger)
-		err := handler(srv, ss)
+		err := handler(srv, ws)
 
 		st := status.Convert(err)
 		if err != nil {

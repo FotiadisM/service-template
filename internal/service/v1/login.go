@@ -9,7 +9,10 @@ import (
 )
 
 func (s *Service) Login(_ context.Context, _ *authv1.LoginRequest) (*authv1.LoginResponse, error) {
-	err := errors.NewInfoError(codes.Internal, "MY_CUSTOM-CODE", "Unexpected error", nil)
+	err := errors.NewInfoError(codes.Internal, "MY_CUSTOM-CODE", "Unexpected error", map[string]string{
+		"one":   "two",
+		"three": "four",
+	})
 
 	return nil, err
 }

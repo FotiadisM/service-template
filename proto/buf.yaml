@@ -1,10 +1,11 @@
 version: v1
 name: buf.build/FotiadisM/mock-microservice
-deps:
-  - buf.build/googleapis/googleapis
-breaking:
-  use:
-    - FILE
 lint:
   use:
     - DEFAULT
+breaking:
+  use:
+    - FILE
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/bufbuild/protovalidate

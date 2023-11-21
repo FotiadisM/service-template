@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package auth.v1;
 
+import "buf/validate/validate.proto";
 import "google/api/annotations.proto";
 
 enum UserType {
@@ -11,9 +12,11 @@ enum UserType {
 }
 
 message RegisterRequest {
-  string email = 1;
-  string password = 2;
-  UserType user_type = 3;
+  string email = 1 [(buf.validate.field).string.email = true];
+  string password = 2 [(buf.validate.field).string.min_len = 8];
+  UserType user_type = 3 [(buf.validate.field).enum = {
+    not_in: [0]
+  }];
 }
 
 message RegisterResponse {
