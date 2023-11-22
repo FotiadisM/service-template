@@ -56,7 +56,7 @@ func main() {
 	}
 
 	svc := svcauthv1.NewService(store)
-	healthSvc := health.NewService(nil, nil, nil)
+	healthSvc := health.NewService()
 
 	server := server.New(config.Server, log)
 	server.RegisterService(func(s *grpc.Server, m *runtime.ServeMux) {

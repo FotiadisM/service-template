@@ -8,12 +8,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type ProbeFunc func(context.Context) (healthv1.HealthCheckResponse_ServingStatus, error)
-
-func DefaultProbeFunc(_ context.Context) (healthv1.HealthCheckResponse_ServingStatus, error) {
-	return healthv1.HealthCheckResponse_SERVING, nil
-}
-
 type service struct {
 	readiness ProbeFunc
 	liveness  ProbeFunc
@@ -22,20 +16,16 @@ type service struct {
 	healthv1.UnimplementedHealthServer
 }
 
-func NewService(readiness, liveness, startup ProbeFunc) healthv1.HealthServer {
-	if readiness == nil {
-		readiness = DefaultProbeFunc
+func NewService(opts ...Option) healthv1.HealthServer {
+	options := defaultOptions()
+	for _, o := range opts {
+		o(options)
 	}
-	if liveness == nil {
-		liveness = DefaultProbeFunc
-	}
-	if startup == nil {
-		startup = DefaultProbeFunc
-	}
+
 	return &service{
-		readiness: readiness,
-		liveness:  liveness,
-		startup:   startup,
+		readiness: options.readiness,
+		liveness:  options.liveness,
+		startup:   options.startup,
 	}
 }
 
