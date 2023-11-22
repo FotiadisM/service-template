@@ -1,4 +1,4 @@
-package servicev1
+package authv1
 
 import (
 	"testing"

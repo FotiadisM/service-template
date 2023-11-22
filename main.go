@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
+	apiauthv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/server"
-	servicev1 "github.com/FotiadisM/mock-microservice/internal/service/v1"
+	svcauthv1 "github.com/FotiadisM/mock-microservice/internal/service/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/health"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
@@ -55,15 +55,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	svc := servicev1.NewService(store)
+	svc := svcauthv1.NewService(store)
 	healthSvc := health.NewService(nil, nil, nil)
 
 	server := server.New(config.Server, log)
 	server.RegisterService(func(s *grpc.Server, m *runtime.ServeMux) {
-		authv1.RegisterAuthServiceServer(s, svc)
+		apiauthv1.RegisterAuthServiceServer(s, svc)
 		healthv1.RegisterHealthServer(s, healthSvc)
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		if err = authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
+		if err = apiauthv1.RegisterAuthServiceHandlerFromEndpoint(ctx, m, config.Server.GRPCAddr, opts); err != nil {
 			log.Error("failed to register server", ilog.Err(err))
 			os.Exit(1)
 		}
