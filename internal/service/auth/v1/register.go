@@ -5,7 +5,7 @@ import (
 	"time"
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
-	"github.com/FotiadisM/mock-microservice/internal/store/queries"
+	"github.com/FotiadisM/mock-microservice/internal/store/repository"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"github.com/google/uuid"
 )
@@ -17,11 +17,11 @@ func (s *Service) Register(ctx context.Context, in *authv1.RegisterRequest) (*au
 	if err != nil {
 		return nil, err
 	}
-	u, err := s.store.CreateUser(ctx, queries.CreateUserParams{
+	u, err := s.store.CreateUser(ctx, repository.CreateUserParams{
 		ID:       id,
 		Email:    in.Email,
 		Password: in.Password,
-		Scope:    queries.UserScopeApplicant,
+		Scope:    repository.UserScopeApplicant,
 	})
 	if err != nil {
 		return nil, err

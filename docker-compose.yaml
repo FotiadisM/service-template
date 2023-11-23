@@ -5,9 +5,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: "auth_svc"
-      POSTGRES_USER: "local_user"
-      POSTGRES_PASSWORD: "local_pass"
+      POSTGRES_PASSWORD: "password"
     volumes:
       - pgvolume:/var/lib/postgresql/data
   postgres-dev:
@@ -15,9 +13,7 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: "local"
-      POSTGRES_USER: "dbuser"
-      POSTGRES_PASSWORD: "dbpass"
+      POSTGRES_PASSWORD: "password"
     volumes:
       - pgvolume-dev:/var/lib/postgresql/data
 volumes:

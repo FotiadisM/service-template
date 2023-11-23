@@ -11,9 +11,9 @@ SELECT * FROM users;
 
 -- name: CreateUser :one
 INSERT INTO users (
-	id, email, password, scope
+    id, email, password, scope
 ) VALUES (
-  $1, $2, $3, $4
+    $1, $2, $3, $4
 )
 RETURNING *;
 

@@ -1,9 +1,16 @@
 env "local" {
-  src = "./internal/store/schema.sql"
+  src = "file://internal/store/db_schema.sql"
+  url = "postgres://postgres:password@localhost:5432/postgres?sslmode=disable"
+  dev = "postgres://postgres:password@localhost:5432/postgres?sslmode=disable"
 
-  url = "postgres://local_user:local_pass@localhost:5432/auth_svc?sslmode=disable"
+  migration {
+    dir = "file://internal/store/migrations"
+    format = atlas
+  }
 
-  dev = "postgres://local_user:local_pass@localhost:5432/auth_svc?sslmode=disable"
-
-  schemas = ["public"]
+  format {
+    migrate {
+	  diff = "{{ sql . \"  \" }}"
+	}
+  }
 }

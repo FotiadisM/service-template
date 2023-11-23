@@ -10,14 +10,14 @@ import (
 	// PostgreSQL databse driver.
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/FotiadisM/mock-microservice/internal/store/queries"
+	"github.com/FotiadisM/mock-microservice/internal/store/repository"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
 type TxFn func(store Store) (err error)
 
 type Store interface {
-	queries.Querier
+	repository.Querier
 	Ping(ctx context.Context) error
 	WithTx(ctx context.Context, fn TxFn) error
 	WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error
@@ -37,7 +37,7 @@ type Config struct {
 
 type store struct {
 	*sql.DB
-	*queries.Queries
+	*repository.Queries
 }
 
 func New(cfg Config) (Store, error) {
@@ -63,7 +63,7 @@ func New(cfg Config) (Store, error) {
 
 	store := &store{
 		DB:      db,
-		Queries: queries.New(db),
+		Queries: repository.New(db),
 	}
 
 	return store, nil

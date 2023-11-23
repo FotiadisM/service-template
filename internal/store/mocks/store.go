@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	queries "github.com/FotiadisM/mock-microservice/internal/store/queries"
+	repository "github.com/FotiadisM/mock-microservice/internal/store/repository"
 	mock "github.com/stretchr/testify/mock"
 
 	sql "database/sql"
@@ -29,21 +29,21 @@ func (_m *MockStore) EXPECT() *MockStore_Expecter {
 }
 
 // CreateUser provides a mock function with given fields: ctx, arg
-func (_m *MockStore) CreateUser(ctx context.Context, arg queries.CreateUserParams) (queries.User, error) {
+func (_m *MockStore) CreateUser(ctx context.Context, arg repository.CreateUserParams) (repository.User, error) {
 	ret := _m.Called(ctx, arg)
 
-	var r0 queries.User
+	var r0 repository.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, queries.CreateUserParams) (queries.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, repository.CreateUserParams) (repository.User, error)); ok {
 		return rf(ctx, arg)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, queries.CreateUserParams) queries.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, repository.CreateUserParams) repository.User); ok {
 		r0 = rf(ctx, arg)
 	} else {
-		r0 = ret.Get(0).(queries.User)
+		r0 = ret.Get(0).(repository.User)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, queries.CreateUserParams) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, repository.CreateUserParams) error); ok {
 		r1 = rf(ctx, arg)
 	} else {
 		r1 = ret.Error(1)
@@ -59,24 +59,24 @@ type MockStore_CreateUser_Call struct {
 
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - arg queries.CreateUserParams
+//   - arg repository.CreateUserParams
 func (_e *MockStore_Expecter) CreateUser(ctx interface{}, arg interface{}) *MockStore_CreateUser_Call {
 	return &MockStore_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, arg)}
 }
 
-func (_c *MockStore_CreateUser_Call) Run(run func(ctx context.Context, arg queries.CreateUserParams)) *MockStore_CreateUser_Call {
+func (_c *MockStore_CreateUser_Call) Run(run func(ctx context.Context, arg repository.CreateUserParams)) *MockStore_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(queries.CreateUserParams))
+		run(args[0].(context.Context), args[1].(repository.CreateUserParams))
 	})
 	return _c
 }
 
-func (_c *MockStore_CreateUser_Call) Return(_a0 queries.User, _a1 error) *MockStore_CreateUser_Call {
+func (_c *MockStore_CreateUser_Call) Return(_a0 repository.User, _a1 error) *MockStore_CreateUser_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockStore_CreateUser_Call) RunAndReturn(run func(context.Context, queries.CreateUserParams) (queries.User, error)) *MockStore_CreateUser_Call {
+func (_c *MockStore_CreateUser_Call) RunAndReturn(run func(context.Context, repository.CreateUserParams) (repository.User, error)) *MockStore_CreateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -125,18 +125,18 @@ func (_c *MockStore_DeleteUser_Call) RunAndReturn(run func(context.Context, uuid
 }
 
 // GetUser provides a mock function with given fields: ctx, id
-func (_m *MockStore) GetUser(ctx context.Context, id uuid.UUID) (queries.User, error) {
+func (_m *MockStore) GetUser(ctx context.Context, id uuid.UUID) (repository.User, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 queries.User
+	var r0 repository.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (queries.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (repository.User, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) queries.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) repository.User); ok {
 		r0 = rf(ctx, id)
 	} else {
-		r0 = ret.Get(0).(queries.User)
+		r0 = ret.Get(0).(repository.User)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
@@ -167,29 +167,29 @@ func (_c *MockStore_GetUser_Call) Run(run func(ctx context.Context, id uuid.UUID
 	return _c
 }
 
-func (_c *MockStore_GetUser_Call) Return(_a0 queries.User, _a1 error) *MockStore_GetUser_Call {
+func (_c *MockStore_GetUser_Call) Return(_a0 repository.User, _a1 error) *MockStore_GetUser_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockStore_GetUser_Call) RunAndReturn(run func(context.Context, uuid.UUID) (queries.User, error)) *MockStore_GetUser_Call {
+func (_c *MockStore_GetUser_Call) RunAndReturn(run func(context.Context, uuid.UUID) (repository.User, error)) *MockStore_GetUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetUserByEmail provides a mock function with given fields: ctx, email
-func (_m *MockStore) GetUserByEmail(ctx context.Context, email string) (queries.User, error) {
+func (_m *MockStore) GetUserByEmail(ctx context.Context, email string) (repository.User, error) {
 	ret := _m.Called(ctx, email)
 
-	var r0 queries.User
+	var r0 repository.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (queries.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (repository.User, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) queries.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) repository.User); ok {
 		r0 = rf(ctx, email)
 	} else {
-		r0 = ret.Get(0).(queries.User)
+		r0 = ret.Get(0).(repository.User)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
@@ -220,30 +220,30 @@ func (_c *MockStore_GetUserByEmail_Call) Run(run func(ctx context.Context, email
 	return _c
 }
 
-func (_c *MockStore_GetUserByEmail_Call) Return(_a0 queries.User, _a1 error) *MockStore_GetUserByEmail_Call {
+func (_c *MockStore_GetUserByEmail_Call) Return(_a0 repository.User, _a1 error) *MockStore_GetUserByEmail_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockStore_GetUserByEmail_Call) RunAndReturn(run func(context.Context, string) (queries.User, error)) *MockStore_GetUserByEmail_Call {
+func (_c *MockStore_GetUserByEmail_Call) RunAndReturn(run func(context.Context, string) (repository.User, error)) *MockStore_GetUserByEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListUsers provides a mock function with given fields: ctx
-func (_m *MockStore) ListUsers(ctx context.Context) ([]queries.User, error) {
+func (_m *MockStore) ListUsers(ctx context.Context) ([]repository.User, error) {
 	ret := _m.Called(ctx)
 
-	var r0 []queries.User
+	var r0 []repository.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]queries.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) ([]repository.User, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []queries.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) []repository.User); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]queries.User)
+			r0 = ret.Get(0).([]repository.User)
 		}
 	}
 
@@ -274,12 +274,12 @@ func (_c *MockStore_ListUsers_Call) Run(run func(ctx context.Context)) *MockStor
 	return _c
 }
 
-func (_c *MockStore_ListUsers_Call) Return(_a0 []queries.User, _a1 error) *MockStore_ListUsers_Call {
+func (_c *MockStore_ListUsers_Call) Return(_a0 []repository.User, _a1 error) *MockStore_ListUsers_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockStore_ListUsers_Call) RunAndReturn(run func(context.Context) ([]queries.User, error)) *MockStore_ListUsers_Call {
+func (_c *MockStore_ListUsers_Call) RunAndReturn(run func(context.Context) ([]repository.User, error)) *MockStore_ListUsers_Call {
 	_c.Call.Return(run)
 	return _c
 }
