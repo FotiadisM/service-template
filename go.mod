@@ -3,7 +3,7 @@ module github.com/FotiadisM/mock-microservice
 go 1.21
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20231106192134-1baebb0a1518.2
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.32.0-20231115204500-e097f827e652.1
 	github.com/bufbuild/protovalidate-go v0.4.1
 	github.com/google/uuid v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0
@@ -20,7 +20,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230913181813-007df8e322eb
 	google.golang.org/grpc v1.59.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
