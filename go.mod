@@ -7,7 +7,7 @@ require (
 	github.com/bufbuild/protovalidate-go v0.5.2
 	github.com/google/uuid v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
-	github.com/jackc/pgx/v5 v5.5.0
+	github.com/jackc/pgx/v5 v5.5.3
 	github.com/sethvargo/go-envconfig v0.9.0
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/otel v1.23.1
