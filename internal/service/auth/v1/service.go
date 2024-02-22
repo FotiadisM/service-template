@@ -3,7 +3,7 @@ package authv1
 import (
 	"context"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
+	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"
 	health "google.golang.org/grpc/health/grpc_health_v1"
 )

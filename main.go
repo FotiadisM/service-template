@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 
-	apiauthv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
+	apiauthv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/server"
 	svcauthv1 "github.com/FotiadisM/mock-microservice/internal/service/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store"

@@ -84,11 +84,11 @@ proto-fmt: buf ## Format protobuf files with buf.
 
 .PHONY: proto-lint
 proto-lint: buf ## Lint protobuf files with buf.
-	@buf lint ./proto
+	@buf lint ./api/proto
 
 .PHONY: proto-gen
 proto-gen: buf proto-fmt proto-lint ## Generate protobuf files with buf.
-	@buf generate ./proto
+	@buf generate ./api/proto
 
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 BUF ?= $(LOCALBIN)/buf

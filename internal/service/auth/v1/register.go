@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/go/auth/v1"
+	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store/repository"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"github.com/google/uuid"
