@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.10.3/.schema/devbox.schema.json",
   "packages": [
-    "buf@latest",
-    "golangci-lint@latest",
-    "gotestsum@latest",
-    "sqlc@latest",
-    "gofumpt@latest"
+    "buf@1.30.0",
+    "golangci-lint@1.57.1",
+    "gotestsum@1.10.1",
+    "sqlc@1.25.0",
+    "gofumpt@0.6.0"
   ],
   "shell": {
     "scripts": {}

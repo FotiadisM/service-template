@@ -1,7 +1,7 @@
 {
   "lockfile_version": "1",
   "packages": {
-    "buf@latest": {
+    "buf@1.30.0": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#buf",
       "source": "devbox-search",
@@ -49,7 +49,7 @@
         }
       }
     },
-    "gofumpt@latest": {
+    "gofumpt@0.6.0": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#gofumpt",
       "source": "devbox-search",
@@ -97,7 +97,7 @@
         }
       }
     },
-    "golangci-lint@latest": {
+    "golangci-lint@1.57.1": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#golangci-lint",
       "source": "devbox-search",
@@ -145,7 +145,7 @@
         }
       }
     },
-    "gotestsum@latest": {
+    "gotestsum@1.10.1": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#gotestsum",
       "source": "devbox-search",
@@ -193,7 +193,7 @@
         }
       }
     },
-    "sqlc@latest": {
+    "sqlc@1.25.0": {
       "last_modified": "2024-03-22T11:26:23Z",
       "resolved": "github:NixOS/nixpkgs/a3ed7406349a9335cb4c2a71369b697cecd9d351#sqlc",
       "source": "devbox-search",
