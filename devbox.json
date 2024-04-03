@@ -5,7 +5,11 @@
     "golangci-lint@1.57.1",
     "gotestsum@1.10.1",
     "sqlc@1.25.0",
-    "gofumpt@0.6.0"
+    "gofumpt@0.6.0",
+    "go-task@3.35.1",
+    "atlas@0.20.0",
+    "go-mockery@2.42.1",
+    "sqlfluff@3.0.3"
   ],
   "shell": {
     "scripts": {}
