@@ -6,18 +6,6 @@ SHELL = /usr/bin/env bash
 .PHONY: default
 default: help
 
-## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	@mkdir -p $(LOCALBIN)
-
-## path for all development dependencies
-export PATH := $(LOCALBIN):$(PATH)
-
-## Tools Versions
-GOLANGCILINT_VERSION ?= 1.53.3
-BUF_VERSION ?= 1.21.0
-
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
@@ -42,17 +30,12 @@ go-vet: ## Run go vet against code.
 	@go vet ./...
 
 .PHONY: go-lint
-go-lint: golangci-lint ## Run golangci-lint against code.
+go-lint: ## Run golangci-lint against code.
 	@golangci-lint run
 
 .PHONY: test
 test: go-vet go-lint ## Run tests using gotestsum.
 	gotestsum --format pkgname-and-test-fails -- -race -count=1 ./...
-
-.PHONY: tools
-tools: export GOBIN=$(LOCALBIN)
-tools: golangci-lint buf | $(LOCALBIN)  ## Install development tools
-	@(cd tools && cat tools.go | grep '_' | awk -F '"' '{print $$2}' | xargs -t go install)
 
 ##@ Build
 
@@ -79,32 +62,13 @@ schema-gen: ## Generate database schema structs and queries
 proto: proto-fmt proto-lint proto-gen ## Formats, lints and generates protobuf files.
 
 .PHONY: proto-fmt
-proto-fmt: buf ## Format protobuf files with buf.
+proto-fmt: ## Format protobuf files with buf.
 	@buf format -w
 
 .PHONY: proto-lint
-proto-lint: buf ## Lint protobuf files with buf.
+proto-lint: ## Lint protobuf files with buf.
 	@buf lint ./api/proto
 
 .PHONY: proto-gen
-proto-gen: buf proto-fmt proto-lint ## Generate protobuf files with buf.
+proto-gen: proto-fmt proto-lint ## Generate protobuf files with buf.
 	@buf generate ./api/proto
-
-GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
-BUF ?= $(LOCALBIN)/buf
-
-.PHONY: golangci-lint
-golangci-lint: $(GOLANGCILINT)
-$(GOLANGCILINT): | $(LOCALBIN)
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v$(GOLANGCILINT_VERSION)
-
-.PHONY: buf
-buf: $(BUF)
-$(BUF): | $(LOCALBIN)
-	@curl -sSfL "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-$(shell uname -s)-$(shell uname -m)" -o "$@" && chmod +x "$@"
-
-##@ Clean
-
-.PHONY: clean
-clean: ## Remove compiled binaries and build tools
-	-rm -rf $(LOCALBIN)
