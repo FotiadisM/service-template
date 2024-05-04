@@ -17,9 +17,4 @@
 
 ## Nice to Have
 
-- [ ] Find a way for dependabot to update binary dependencies located in Makefile.
 - [ ] Update documentation on packages.
-- [ ] Have a better Makefile.
-- [ ] Install atlas cli.
-- [ ] Install mockery cli
-- [ ] Find a way to format DB schema and queries. Probably `sqlfluff`.
