@@ -26,9 +26,9 @@ type Store interface {
 type Config struct {
 	Host            string            `env:"PSQL_HOST,default=localhost"`
 	Port            int               `env:"PSQL_PORT,default=5432"`
-	Username        string            `env:"PSQL_USER,default=local_user"`
-	Password        string            `env:"PSQL_PASS,default=local_pass" json:"-"`
-	Database        string            `env:"PSQL_DBNAME,default=auth_svc"`
+	Username        string            `env:"PSQL_USER,default=postgres"`
+	Password        string            `env:"PSQL_PASS,default=postgres" json:"-"`
+	Database        string            `env:"PSQL_DBNAME,default=local"`
 	Params          map[string]string `env:"PSQL_PARAMS,default=sslmode:disable" json:",omitempty"`
 	MaxOpenConns    int               `env:"PSQL_OPEN_CONNS"`
 	MaxIdleConns    int               `env:"PSQL_IDLE_CONNS"`

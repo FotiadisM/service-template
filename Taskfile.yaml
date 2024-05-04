@@ -13,7 +13,7 @@ tasks:
     deps:
       - go:lint
       - buf:lint
-      - sqlc:gen
+      - sql:lint
 
   gen:
     desc: Generate code.
@@ -59,12 +59,47 @@ tasks:
 
   sql:fmt:
     desc: Format sql code.
-    cmd: sqlfluff format -d postgres
+    cmds:
+      - atlas schema fmt
+      - sqlfluff format -d postgres
+      - task: sql:migrations:hash
+
+  sql:lint:
+    desc: Lint sql code.
+    cmd: atlas migrate lint --env local --latest 1
 
   sql:gen:
     desc: Generate DB schema structs and queries
     cmd: sqlc generate
 
-  sql:migrate:
-    desc: Run the DB migrations.
-    cmd: atlas schema apply --env local
+  sql:migrations:new:
+    desc: Create a new migration file
+    cmds:
+      - for: ["postgres", "postgres-dev"]
+        task: sql:db:reset
+        vars:
+          CONTAINER: "{{.ITEM}}"
+      - atlas migrate diff --env local {{.CLI_ARGS}}
+
+  sql:migrations:apply:
+    desc: Apply the migrations to the database.
+    cmds:
+      - for: ["postgres", "postgres-dev"]
+        task: sql:db:reset
+        vars:
+          CONTAINER: "{{.ITEM}}"
+      - atlas migrate apply --env local
+
+  sql:migrations:hash:
+    desc: Re-calculate atlas.sum after a manual migrations change.
+    cmd: atlas migrate hash --env local
+
+  sql:db:reset:
+    silent: true
+    internal: true
+    desc: Drop and re-create the database
+    vars:
+      DB_NAME: local
+    cmds:
+      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "DROP DATABASE IF EXISTS {{.DB_NAME}};"
+      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "CREATE DATABASE {{.DB_NAME}};"
