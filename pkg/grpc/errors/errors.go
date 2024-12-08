@@ -3,10 +3,11 @@ package errors
 import (
 	"fmt"
 
-	"github.com/FotiadisM/mock-microservice/pkg/version"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/FotiadisM/mock-microservice/pkg/version"
 )
 
 func NewInfoError(code codes.Code, reason, msg string, md map[string]string) error {

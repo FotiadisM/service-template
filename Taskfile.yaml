@@ -29,7 +29,9 @@ tasks:
 
   go:fmt:
     desc: Format Go code.
-    cmd: gofumpt -w .
+    cmds:
+      - gofumpt -w .
+      - goimports -local $(go list -m) -w .
 
   go:lint:
     desc: Lint Go code.

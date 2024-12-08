@@ -12,7 +12,7 @@ func UnaryServerInterceptor(opts ...Option) grpc.UnaryServerInterceptor {
 		o(options)
 	}
 
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res any, err error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res any, err error) {
 		defer func() {
 			if p := recover(); p != nil {
 				err = options.recoveryFn(ctx, p)
@@ -31,7 +31,7 @@ func StreamServerInterceptor(opts ...Option) grpc.StreamServerInterceptor {
 		o(options)
 	}
 
-	return func(srv any, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	return func(srv any, stream grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		defer func() {
 			if p := recover(); p != nil {
 				err = options.recoveryFn(stream.Context(), p)

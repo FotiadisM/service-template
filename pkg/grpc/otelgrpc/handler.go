@@ -6,17 +6,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 	grpcCodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
+
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
 )
 
 func TraceAttributes(ctx context.Context) (traceID string, attrs []attribute.KeyValue, ok bool) {
@@ -26,12 +27,26 @@ func TraceAttributes(ctx context.Context) (traceID string, attrs []attribute.Key
 		return "", nil, false
 	}
 
-	observer := observerFromCtx(ctx)
-	if observer.attrs == nil || observer.skip {
+	gctx, _ := ctx.Value(grpcContextKey{}).(*grpcContext)
+	if gctx.attrs == nil || gctx.skip {
 		return "", nil, false
 	}
 
-	return t.String(), observer.attrs, ok
+	return t.String(), gctx.attrs, ok
+}
+
+type grpcContextKey struct{}
+
+type grpcContext struct {
+	skip bool
+
+	msgSentCount    int
+	msgReceiveCount int
+
+	// isStreaming is used to avoid measuring duration in streaming RPCs
+	isStreaming bool
+
+	attrs []attribute.KeyValue
 }
 
 type statsHandler struct {
@@ -42,6 +57,9 @@ type statsHandler struct {
 	tracer       trace.Tracer
 	meter        metric.Meter
 	errorHandler otel.ErrorHandler
+
+	requestMetadata  bool
+	responseMetadata bool
 
 	duration     metric.Int64Histogram
 	requestSize  metric.Int64Histogram
@@ -55,9 +73,11 @@ var _ stats.Handler = &statsHandler{}
 
 func (h *statsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
 	if h.filter != nil && h.filter(info.FullMethodName) {
-		observer := &observer{skip: true}
-		return ctxWithObserver(ctx, observer)
+		gctx := &grpcContext{skip: true}
+		return context.WithValue(ctx, grpcContextKey{}, gctx)
 	}
+
+	ctx = extract(ctx, h.propagator)
 
 	name, attrs := spanInfo(info.FullMethodName)
 
@@ -66,16 +86,16 @@ func (h *statsHandler) TagRPC(ctx context.Context, info *stats.RPCTagInfo) conte
 		trace.WithAttributes(attrs...),
 	)
 
-	observer := &observer{
+	gctx := &grpcContext{
 		attrs: attrs,
 	}
 
-	return ctxWithObserver(extract(ctx, h.propagator), observer)
+	return context.WithValue(ctx, grpcContextKey{}, gctx)
 }
 
 func (h *statsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {
-	observer := observerFromCtx(ctx)
-	if observer.skip {
+	gctx, _ := ctx.Value(grpcContextKey{}).(*grpcContext)
+	if gctx.skip {
 		return
 	}
 
@@ -83,64 +103,84 @@ func (h *statsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {
 
 	switch rs := rpcStats.(type) {
 	case *stats.InHeader:
-		switch addr := rs.RemoteAddr.(type) {
-		case *net.TCPAddr:
-			attr := semconv.NetPeerName(addr.IP.String())
-			observer.attrs = append(observer.attrs, attr)
-			span.SetAttributes(attr)
+		attrs := []attribute.KeyValue{}
+		for k, values := range rs.Header {
+			attrValue := "["
+			for i, v := range values {
+				attrValue += v
+				if i != len(values)-1 {
+					attrValue += ","
+				}
+			}
+			attrs = append(attrs, attribute.String("rpc.grpc.metadata."+k, attrValue))
+		}
+		span.SetAttributes(attrs...)
+
+		// TODO(FotiadisM): validate server and client
+		if addr, ok := rs.RemoteAddr.(*net.TCPAddr); ok {
+			gctx.attrs = append(gctx.attrs, semconv.ServerAddress(addr.IP.String()), semconv.ServerPort(addr.Port))
+			span.SetAttributes(semconv.ServerAddress(addr.IP.String()), semconv.ServerPort(addr.Port))
+		}
+		if addr, ok := rs.LocalAddr.(*net.TCPAddr); ok {
+			gctx.attrs = append(gctx.attrs, semconv.ClientAddress(addr.IP.String()), semconv.ClientPort(addr.Port))
+			span.SetAttributes(semconv.ClientAddress(addr.IP.String()), semconv.ClientPort(addr.Port))
 		}
 
+		// TODO(FotiadisM): add request metadata
+
 	case *stats.Begin:
-		observer.isStreaming = rs.IsClientStream || rs.IsServerStream
+		gctx.isStreaming = rs.IsClientStream || rs.IsServerStream
 
 	case *stats.InPayload:
-		h.requestSize.Record(ctx, int64(rs.Length), metric.WithAttributes(observer.attrs...))
+		h.requestSize.Record(ctx, int64(rs.Length), metric.WithAttributes(gctx.attrs...))
 
-		observer.msgReceiveCount++
-		span.AddEvent("message", trace.WithAttributes(
-			semconv.MessageTypeReceived,
-			semconv.MessageID(observer.msgReceiveCount),
-			semconv.MessageUncompressedSize(rs.Length),
-			semconv.MessageCompressedSize(rs.WireLength),
-		))
+		if gctx.isStreaming {
+			gctx.msgReceiveCount++
+			span.AddEvent("message", trace.WithAttributes(
+				semconv.MessageTypeReceived,
+				semconv.MessageID(gctx.msgReceiveCount),
+				semconv.MessageUncompressedSize(rs.Length),
+				semconv.MessageCompressedSize(rs.WireLength),
+			))
+		}
 
 	case *stats.OutPayload:
-		h.responseSize.Record(ctx, int64(rs.Length), metric.WithAttributes(observer.attrs...))
+		h.responseSize.Record(ctx, int64(rs.Length), metric.WithAttributes(gctx.attrs...))
 
-		observer.msgSentCount++
-		span.AddEvent("message", trace.WithAttributes(
-			semconv.MessageTypeSent,
-			semconv.MessageID(observer.msgSentCount),
-			semconv.MessageUncompressedSize(rs.Length),
-			semconv.MessageCompressedSize(rs.WireLength),
-		))
+		if gctx.isStreaming {
+			gctx.msgSentCount++
+			span.AddEvent("message", trace.WithAttributes(
+				semconv.MessageTypeSent,
+				semconv.MessageID(gctx.msgSentCount),
+				semconv.MessageUncompressedSize(rs.Length),
+				semconv.MessageCompressedSize(rs.WireLength),
+			))
+		}
 
 	case *stats.End:
 		rpcCode := grpcCodes.OK
 		rpcMsg := ""
 		if rs.Error != nil {
-			st, ok := status.FromError(rs.Error)
-			if ok {
+			rpcCode = grpcCodes.Internal
+			rpcMsg = rs.Error.Error()
+			if st, ok := status.FromError(rs.Error); ok {
 				rpcCode = st.Code()
 				rpcMsg = st.Message()
-			} else {
-				rpcCode = grpcCodes.Internal
-				rpcMsg = rs.Error.Error()
 			}
 		}
 
 		span.SetAttributes(semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
-		observer.attrs = append(observer.attrs, semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
-		if rpcCode != grpcCodes.OK {
+		gctx.attrs = append(gctx.attrs, semconv.RPCGRPCStatusCodeKey.Int(int(rpcCode)))
+		if rpcCode != grpcCodes.OK { // set error code propely
 			span.SetStatus(codes.Error, rpcMsg)
 		}
 
-		if observer.isStreaming {
-			h.requests.Record(ctx, int64(observer.msgReceiveCount), metric.WithAttributes(observer.attrs...))
-			h.responses.Record(ctx, int64(observer.msgSentCount), metric.WithAttributes(observer.attrs...))
+		if gctx.isStreaming {
+			h.requests.Record(ctx, int64(gctx.msgReceiveCount), metric.WithAttributes(gctx.attrs...))
+			h.responses.Record(ctx, int64(gctx.msgSentCount), metric.WithAttributes(gctx.attrs...))
 		} else {
 			duration := rs.EndTime.Sub(rs.BeginTime) / time.Millisecond
-			h.duration.Record(ctx, int64(duration), metric.WithAttributes(observer.attrs...))
+			h.duration.Record(ctx, int64(duration), metric.WithAttributes(gctx.attrs...))
 		}
 
 		span.End()

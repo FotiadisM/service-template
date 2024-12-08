@@ -5,8 +5,9 @@ package mocks
 import (
 	context "context"
 
-	repository "github.com/FotiadisM/mock-microservice/internal/store/repository"
 	mock "github.com/stretchr/testify/mock"
+
+	repository "github.com/FotiadisM/mock-microservice/internal/store/repository"
 
 	sql "database/sql"
 

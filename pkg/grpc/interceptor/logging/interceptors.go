@@ -3,14 +3,16 @@ package logging
 import (
 	"context"
 	"log/slog"
-	"strconv"
+	"slices"
 	"strings"
+	"time"
+
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
-	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/status"
 )
 
 func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServerInterceptor {
@@ -41,45 +43,36 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 			"rpc.method", parts[1],
 		)
 
-		ctx = ilog.ContextWithLogger(ctx, logger)
-		res, err := handler(ctx, req)
-
-		st := status.Convert(err)
-		if err != nil {
-			logger = logger.With("error", st.Message())
-		}
-
-		for _, detail := range st.Details() {
-			switch t := detail.(type) {
-			case *errdetails.BadRequest:
-				attrs := []slog.Attr{}
-				for i, fv := range t.FieldViolations {
-					attrs = append(attrs, slog.Group(strconv.Itoa(i),
-						slog.String("field", fv.Field),
-						slog.String("description", fv.Description),
-					))
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok && options.requestHeaders {
+			for key, value := range md {
+				if slices.Index(options.hideRequestHeaders, key) != -1 {
+					continue
 				}
-				logger = logger.With("violations", attrs)
-			case *errdetails.DebugInfo:
-			case *errdetails.ErrorInfo:
-				md := []slog.Attr{}
-				for k, v := range t.Metadata {
-					md = append(md, slog.String(k, v))
-				}
-				logger = logger.With(slog.Group(
-					"error_info",
-					"reason", t.Reason,
-					"domain", t.Domain,
-					"metadata", md,
-				))
-			case *errdetails.PreconditionFailure:
-			case *errdetails.RequestInfo:
+				logger = logger.With("rpc.grpc.request.metadata."+key, value)
 			}
 		}
 
-		lvl := options.levelFunc(st.Code())
+		ctx = ilog.ContextWithLogger(ctx, logger)
+		start := time.Now()
+		res, err := handler(ctx, req)
+		duration := time.Since(start)
 
-		logger.LogAttrs(ctx, lvl, "finished call", slog.Int("rpc.grpc.status_code", int(st.Code())))
+		logAttrs := []slog.Attr{slog.Int64("rpc.server.duration", duration.Milliseconds())}
+		st := status.Convert(err)
+		if err != nil {
+			logAttrs = append(logAttrs, ilog.Err(st.Message()))
+		}
+
+		detailsAttrs := options.grpcDetailsToLogAttrsFunc(st.Details())
+		if len(detailsAttrs) > 0 {
+			logAttrs = append(logAttrs, detailsAttrs...)
+		}
+
+		level := options.codeToLevelFunc(st.Code())
+		logAttrs = append(logAttrs, slog.Int("rpc.grpc.status_code", int(st.Code())))
+
+		logger.LogAttrs(ctx, level, "request_end", logAttrs...)
 
 		return res, err
 	}
@@ -136,17 +129,34 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 			"rpc.method", parts[1],
 		)
 
+		md, ok := metadata.FromIncomingContext(ctx)
+		if ok && options.requestHeaders {
+			for key, value := range md {
+				if slices.Index(options.hideRequestHeaders, key) != -1 {
+					continue
+				}
+				logger = logger.With("rpc.grpc.request.metadata."+key, value)
+			}
+		}
+
 		ws.WrappedContext = ilog.ContextWithLogger(ctx, logger)
 		err := handler(srv, ws)
 
+		logAttrs := []slog.Attr{}
 		st := status.Convert(err)
 		if err != nil {
-			logger = logger.With("error", st.Message())
+			logAttrs = append(logAttrs, ilog.Err(st.Message()))
 		}
 
-		lvl := options.levelFunc(st.Code())
+		detailsAttrs := options.grpcDetailsToLogAttrsFunc(st.Details())
+		if len(detailsAttrs) > 0 {
+			logAttrs = append(logAttrs, detailsAttrs...)
+		}
 
-		logger.LogAttrs(ctx, lvl, "finished call", slog.Int("rpc.grpc.status_code", int(st.Code())))
+		level := options.codeToLevelFunc(st.Code())
+		logAttrs = append(logAttrs, slog.Int("rpc.grpc.status_code", int(st.Code())))
+
+		logger.LogAttrs(ctx, level, "request_end", logAttrs...)
 
 		return err
 	}

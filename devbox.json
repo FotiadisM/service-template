@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.10.3/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.13.6/.schema/devbox.schema.json",
   "packages": [
     "buf@1.31.0",
     "golangci-lint@1.57.2",
@@ -9,9 +9,10 @@
     "go-task@3.36.0",
     "atlas@0.21.1",
     "go-mockery@2.42.3",
-    "sqlfluff@3.0.5"
+    "sqlfluff@3.0.5",
+    "delve@1.22.1",
+    "goimports@2021-01-13",
+    "grpcui@1.4.2"
   ],
-  "shell": {
-    "scripts": {}
-  }
+  "env_from": "local.env"
 }

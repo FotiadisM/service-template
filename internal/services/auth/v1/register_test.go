@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/stretchr/testify/mock"
+
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/store/mocks"
 	"github.com/FotiadisM/mock-microservice/internal/store/repository"
-	"github.com/stretchr/testify/mock"
 )
 
 func (t *UnitTestSuit) TestRegister() {
@@ -15,7 +16,7 @@ func (t *UnitTestSuit) TestRegister() {
 
 	store := mocks.NewMockStore(t.T())
 	store.EXPECT().CreateUser(mock.Anything, mock.Anything).RunAndReturn(
-		func(ctx context.Context, params repository.CreateUserParams) (repository.User, error) {
+		func(_ context.Context, params repository.CreateUserParams) (repository.User, error) {
 			return repository.User{
 				ID:        params.ID,
 				Email:     params.Email,

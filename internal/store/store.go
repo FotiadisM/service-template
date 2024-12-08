@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	// PostgreSQL databse driver.
 	_ "github.com/jackc/pgx/v5/stdlib"
 
+	"github.com/FotiadisM/mock-microservice/internal/config"
 	"github.com/FotiadisM/mock-microservice/internal/store/repository"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
@@ -23,26 +23,14 @@ type Store interface {
 	WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error
 }
 
-type Config struct {
-	Host            string            `env:"PSQL_HOST,default=localhost"`
-	Port            int               `env:"PSQL_PORT,default=5432"`
-	Username        string            `env:"PSQL_USER,default=postgres"`
-	Password        string            `env:"PSQL_PASS,default=postgres" json:"-"`
-	Database        string            `env:"PSQL_DBNAME,default=local"`
-	Params          map[string]string `env:"PSQL_PARAMS,default=sslmode:disable" json:",omitempty"`
-	MaxOpenConns    int               `env:"PSQL_OPEN_CONNS"`
-	MaxIdleConns    int               `env:"PSQL_IDLE_CONNS"`
-	ConnMaxLifetime time.Duration     `env:"PSQL_CONN_LIFETIME"`
-}
-
 type store struct {
 	*sql.DB
 	*repository.Queries
 }
 
-func New(cfg Config) (Store, error) {
-	str := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database)
-	for k, v := range cfg.Params {
+func New(config config.DB) (Store, error) {
+	str := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", config.Host, config.Port, config.Username, config.Password, config.Database)
+	for k, v := range config.Params {
 		str += fmt.Sprintf(" %s=%s", k, v)
 	}
 
@@ -51,14 +39,14 @@ func New(cfg Config) (Store, error) {
 		return nil, err
 	}
 
-	if cfg.MaxOpenConns > 0 {
-		db.SetMaxOpenConns(cfg.MaxOpenConns)
+	if config.MaxOpenConns > 0 {
+		db.SetMaxOpenConns(config.MaxOpenConns)
 	}
-	if cfg.MaxIdleConns > 0 {
-		db.SetMaxIdleConns(cfg.MaxIdleConns)
+	if config.MaxIdleConns > 0 {
+		db.SetMaxIdleConns(config.MaxIdleConns)
 	}
-	if cfg.ConnMaxLifetime > 0 {
-		db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
+	if config.ConnMaxLifetime > 0 {
+		db.SetConnMaxLifetime(config.ConnMaxLifetime)
 	}
 
 	store := &store{
@@ -82,7 +70,7 @@ func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn
 
 	tx, err := s.DB.BeginTx(ctx, options)
 	if err != nil {
-		log.Error("failed to begin transaction", ilog.Err(err))
+		log.Error("failed to begin transaction", ilog.Err(err.Error()))
 		return err
 	}
 
@@ -90,7 +78,7 @@ func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn
 		if p := recover(); p != nil {
 			log.Error("recovered from panic, rolling back transaction and panicking again")
 			if txErr := tx.Rollback(); txErr != nil {
-				log.Error("failed to roll back transaction", ilog.Err(err))
+				log.Error("failed to roll back transaction", ilog.Err(err.Error()))
 			}
 			panic(p)
 		}

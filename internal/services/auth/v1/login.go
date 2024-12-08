@@ -3,9 +3,10 @@ package authv1
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/errors"
-	"google.golang.org/grpc/codes"
 )
 
 func (s *Service) Login(_ context.Context, _ *authv1.LoginRequest) (*authv1.LoginResponse, error) {

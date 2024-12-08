@@ -17,7 +17,7 @@ func UnaryServerInterceptor(validator *protovalidate.Validator, opts ...Option) 
 		o(options)
 	}
 
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res any, err error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res any, err error) {
 		msg, ok := req.(proto.Message)
 		if !ok {
 			return nil, ErrUnsupportedMessageType
@@ -59,7 +59,7 @@ func StreamServerInterceptor(validator *protovalidate.Validator, opts ...Option)
 		o(options)
 	}
 
-	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	return func(srv any, ss grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		ws := &wrappedServerStream{ServerStream: ss, options: options, validator: validator}
 
 		return handler(srv, ws)
