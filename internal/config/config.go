@@ -18,10 +18,10 @@ type Logging struct {
 type DB struct {
 	Host            string            `env:"HOST, required"`
 	Port            int               `env:"PORT, required"`
-	Username        string            `env:"USER, required" json:"-"`
-	Password        string            `env:"PASS, required" json:"-"`
+	Username        string            `env:"USER, required"                  json:"-"`
+	Password        string            `env:"PASS, required"                  json:"-"`
 	Database        string            `env:"DBNAME, required"`
-	Params          map[string]string `env:"PARAMS, default=sslmode:disable" json:",omitempty"`
+	Params          map[string]string `env:"PARAMS, default=sslmode:disable"`
 	MaxOpenConns    int               `env:"OPEN_CONNS"`
 	MaxIdleConns    int               `env:"IDLE_CONNS"`
 	ConnMaxLifetime time.Duration     `env:"CONN_LIFETIME"`

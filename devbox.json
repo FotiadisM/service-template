@@ -1,18 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.13.6/.schema/devbox.schema.json",
   "packages": [
-    "buf@1.31.0",
-    "golangci-lint@1.57.2",
-    "gotestsum@1.10.1",
-    "sqlc@1.26.0",
-    "gofumpt@0.6.0",
-    "go-task@3.36.0",
-    "atlas@0.21.1",
-    "go-mockery@2.42.3",
-    "sqlfluff@3.0.5",
-    "delve@1.22.1",
-    "goimports@2021-01-13",
-    "grpcui@1.4.2"
+    "buf@1.47.0",
+    "golangci-lint@1.62.2",
+    "gotestsum@latest",
+    "sqlc@1.27.0",
+    "gofumpt@latest",
+    "go-task@latest",
+    "atlas@0.29.0",
+    "go-mockery@2.46.3",
+    "sqlfluff@latest",
+    "delve@1.23.1",
+    "grpcui@latest"
   ],
   "env_from": "local.env"
 }
