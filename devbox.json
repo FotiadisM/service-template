@@ -11,7 +11,8 @@
     "go-mockery@2.46.3",
     "sqlfluff@latest",
     "delve@1.23.1",
-    "grpcui@latest"
+    "grpcui@latest",
+    "nodePackages.prettier@latest"
   ],
   "env_from": "local.env"
 }

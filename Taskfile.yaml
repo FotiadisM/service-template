@@ -7,6 +7,7 @@ tasks:
       - go:fmt
       - buf:fmt
       - sql:fmt
+      - config:fmt
 
   lint:
     desc: Lint code.
@@ -105,3 +106,7 @@ tasks:
     cmds:
       - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "DROP DATABASE IF EXISTS {{.DB_NAME}};"
       - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "CREATE DATABASE {{.DB_NAME}};"
+
+  config:fmt:
+    desc: Format all config files
+    cmd: prettier --write .

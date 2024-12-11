@@ -9,12 +9,8 @@
       "name": "AuthService"
     }
   ],
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
   "paths": {
     "/v1/auth/login": {
       "post": {
@@ -43,9 +39,7 @@
             }
           }
         ],
-        "tags": [
-          "AuthService"
-        ]
+        "tags": ["AuthService"]
       }
     },
     "/v1/auth/logout": {
@@ -65,9 +59,7 @@
             }
           }
         },
-        "tags": [
-          "AuthService"
-        ]
+        "tags": ["AuthService"]
       }
     },
     "/v1/auth/refresh": {
@@ -97,9 +89,7 @@
             }
           }
         ],
-        "tags": [
-          "AuthService"
-        ]
+        "tags": ["AuthService"]
       }
     },
     "/v1/auth/register": {
@@ -129,9 +119,7 @@
             }
           }
         ],
-        "tags": [
-          "AuthService"
-        ]
+        "tags": ["AuthService"]
       }
     }
   },
