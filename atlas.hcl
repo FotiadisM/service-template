@@ -1,7 +1,7 @@
 env "local" {
   src = "file://internal/store/schema"
-  url = "postgres://postgres:postgres@localhost:5432/local?sslmode=disable"
-  dev = "postgres://postgres:postgres@localhost:5433/local?sslmode=disable"
+  url = getenv("ATLAS_PSQL_URI")
+  dev = getenv("ATLAS_PSQL_DEV_URI")
 
   migration {
     dir    = "file://internal/store/migrations"

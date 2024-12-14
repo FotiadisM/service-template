@@ -101,11 +101,9 @@ tasks:
     silent: true
     internal: true
     desc: Drop and re-create the database
-    vars:
-      DB_NAME: local
     cmds:
-      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "DROP DATABASE IF EXISTS {{.DB_NAME}};"
-      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "CREATE DATABASE {{.DB_NAME}};"
+      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "DROP DATABASE IF EXISTS $PSQL_DBNAME;"
+      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "CREATE DATABASE $PSQL_DBNAME;"
 
   config:fmt:
     desc: Format all config files
