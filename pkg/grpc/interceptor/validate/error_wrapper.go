@@ -17,10 +17,11 @@ func defaultErrWrapperFunc(err error) error {
 		fvs := []*errdetails.BadRequest_FieldViolation{}
 		for _, v := range valErr.Violations {
 			fvs = append(fvs, &errdetails.BadRequest_FieldViolation{
-				Field:       *v.FieldPath,
-				Description: *v.Message,
+				Field:       protovalidate.FieldPathString(v.Proto.Field),
+				Description: *v.Proto.Message,
 			})
 		}
+
 		return gerrors.NewBadRequestError(codes.InvalidArgument, "Failed to validate request", fvs)
 	}
 
