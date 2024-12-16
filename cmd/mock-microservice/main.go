@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/bufbuild/protovalidate-go"
@@ -19,7 +18,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/stats"
 
 	apiauthv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/config"
@@ -35,26 +33,6 @@ import (
 )
 
 //go:generate mockery
-
-func otelgrpcFilter(ri *stats.RPCTagInfo) bool {
-	fullName := strings.TrimLeft(ri.FullMethodName, "/")
-	parts := strings.Split(fullName, "/")
-	if len(parts) != 2 {
-		return true
-	}
-	service := parts[0]
-
-	switch service {
-	case "grpc.reflection.v1.ServerReflection":
-		return false
-	case "grpc.reflection.v1alpha.ServerReflection":
-		return false
-	case "grpc.health.v1.Health":
-		return false
-	}
-
-	return true
-}
 
 func main() {
 	version.AddFlag(nil)
@@ -81,14 +59,14 @@ func main() {
 	}
 
 	if !config.Server.OTEL.SDKDisabled {
-		var otelShutDownFunc otelShutDownFunc
-		otelShutDownFunc, err = initializeOTEL(ctx, log, config.Server.OTEL.ExporterAddr)
+		var otelShutDown otelShutDownFunc
+		otelShutDown, err = initializeOTEL(ctx, log, config.Server.OTEL.ExporterAddr)
 		if err != nil {
 			log.Error("failed to initialize otel sdk", ilog.Err(err.Error()))
 			os.Exit(1)
 		}
 		defer func() {
-			err = otelShutDownFunc(context.Background())
+			err = otelShutDown(context.Background())
 			if err != nil {
 				log.Error("failed to shutdown otel exporter", ilog.Err(err.Error()))
 			}
