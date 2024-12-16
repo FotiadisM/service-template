@@ -40,7 +40,7 @@ type GRPC struct {
 }
 
 type HTTP struct {
-	Addr string `env:"ADDR, default=:9090"`
+	Addr string `env:"ADDR, default=:8085"`
 	// ReadTimeout sets the maximum time a client has to fully stream a request (5s).
 	ReadTimeout time.Duration `env:"READ_TIMEOUT, default=5s"`
 	// WriteTimeout sets the maximum amount of time a handler has to fully process a request (10s).
@@ -59,9 +59,15 @@ type HTTP struct {
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT, default=5s"`
 }
 
+type OTEL struct {
+	SDKDisabled  bool   `env:"SDK_DISABLED"`
+	ExporterAddr string `env:"EXPORTER_ADDR"`
+}
+
 type Server struct {
 	GRPC GRPC `env:", prefix=GRPC_SERVER_"`
 	HTTP HTTP `env:", prefix=HTTPP_SERVER_"`
+	OTEL OTEL `env:", prefix=OTEL_"`
 }
 
 type Config struct {

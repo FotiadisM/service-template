@@ -4,19 +4,22 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/bufbuild/protovalidate-go"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	healthv1 "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/stats"
 
 	apiauthv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/config"
@@ -33,6 +36,26 @@ import (
 
 //go:generate mockery
 
+func otelgrpcFilter(ri *stats.RPCTagInfo) bool {
+	fullName := strings.TrimLeft(ri.FullMethodName, "/")
+	parts := strings.Split(fullName, "/")
+	if len(parts) != 2 {
+		return true
+	}
+	service := parts[0]
+
+	switch service {
+	case "grpc.reflection.v1.ServerReflection":
+		return false
+	case "grpc.reflection.v1alpha.ServerReflection":
+		return false
+	case "grpc.health.v1.Health":
+		return false
+	}
+
+	return true
+}
+
 func main() {
 	version.AddFlag(nil)
 	flag.Parse()
@@ -41,9 +64,7 @@ func main() {
 	config := config.NewConfig(ctx)
 
 	log := ilog.NewLogger()
-	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
-		log.Error("open-telemtry error", ilog.Err(err.Error()))
-	}))
+	slog.SetDefault(log)
 
 	store, err := store.New(config.DB)
 	if err != nil {
@@ -58,6 +79,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	if !config.Server.OTEL.SDKDisabled {
+		var otelShutDownFunc otelShutDownFunc
+		otelShutDownFunc, err = initializeOTEL(ctx, log, config.Server.OTEL.ExporterAddr)
+		if err != nil {
+			log.Error("failed to initialize otel sdk", ilog.Err(err.Error()))
+			os.Exit(1)
+		}
+		defer func() {
+			err = otelShutDownFunc(context.Background())
+			if err != nil {
+				log.Error("failed to shutdown otel exporter", ilog.Err(err.Error()))
+			}
+		}()
+		log.Info("enabled otel instrumentation")
+	}
+
+	otelStatsHandler := otelgrpc.NewServerHandler(otelgrpc.WithFilter(otelgrpcFilter))
 
 	usi := []grpc.UnaryServerInterceptor{
 		logging.UnaryServerInterceptor(log,
@@ -76,12 +115,13 @@ func main() {
 	grpcOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(usi...),
 		grpc.ChainStreamInterceptor(ssi...),
+		grpc.StatsHandler(otelStatsHandler),
 	}
 
 	grpcServer := grpc.NewServer(grpcOpts...)
 	if config.Server.GRPC.Reflection {
-		log.Info("enabling grpc reflection")
 		reflection.Register(grpcServer)
+		log.Info("enabled grpc reflection")
 	}
 
 	mux := runtime.NewServeMux()
@@ -111,7 +151,7 @@ func main() {
 
 	log.Info("grpc server is listening", "port", config.Server.GRPC.Addr)
 	go func() {
-		err := grpcServer.Serve(lis)
+		err = grpcServer.Serve(lis)
 		if err != nil {
 			log.Error("grpc serve failed", ilog.Err(err.Error()))
 			os.Exit(1)
@@ -120,7 +160,7 @@ func main() {
 
 	log.Info("http server is listening", "port", config.Server.HTTP.Addr)
 	go func() {
-		err := httpServer.ListenAndServe()
+		err = httpServer.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("http listen and serve failed", ilog.Err(err.Error()))
 			os.Exit(1)

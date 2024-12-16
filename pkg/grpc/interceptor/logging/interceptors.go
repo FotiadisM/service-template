@@ -26,11 +26,6 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 			return handler(ctx, req)
 		}
 
-		traceID := trace.SpanContextFromContext(ctx).TraceID()
-		if traceID.IsValid() {
-			logger = logger.With("trace.id", traceID)
-		}
-
 		fullName := strings.TrimLeft(info.FullMethod, "/")
 		parts := strings.Split(fullName, "/")
 		if len(parts) != 2 {
@@ -38,10 +33,15 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 			return handler(ctx, req)
 		}
 
-		logger = logger.With(
+		ctxLogger := logger.With(
 			"rpc.service", parts[0],
 			"rpc.method", parts[1],
 		)
+
+		traceID := trace.SpanContextFromContext(ctx).TraceID()
+		if traceID.IsValid() {
+			ctxLogger = ctxLogger.With("trace.id", traceID)
+		}
 
 		md, ok := metadata.FromIncomingContext(ctx)
 		if ok && options.requestHeaders {
@@ -49,11 +49,11 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 				if slices.Index(options.hideRequestHeaders, key) != -1 {
 					continue
 				}
-				logger = logger.With("rpc.grpc.request.metadata."+key, value)
+				ctxLogger = ctxLogger.With("rpc.grpc.request.metadata."+key, value)
 			}
 		}
 
-		ctx = ilog.ContextWithLogger(ctx, logger)
+		ctx = ilog.ContextWithLogger(ctx, ctxLogger)
 		start := time.Now()
 		res, err := handler(ctx, req)
 		duration := time.Since(start)
@@ -72,7 +72,7 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 		level := options.codeToLevelFunc(st.Code())
 		logAttrs = append(logAttrs, slog.Int("rpc.grpc.status_code", int(st.Code())))
 
-		logger.LogAttrs(ctx, level, "request_end", logAttrs...)
+		ctxLogger.LogAttrs(ctx, level, "request_end", logAttrs...)
 
 		return res, err
 	}
@@ -112,11 +112,6 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 		ws := wrapServerStream(ss)
 		ctx := ws.Context()
 
-		traceID := trace.SpanContextFromContext(ctx).TraceID()
-		if traceID.IsValid() {
-			logger = logger.With("trace.id", traceID)
-		}
-
 		fullName := strings.TrimLeft(info.FullMethod, "/")
 		parts := strings.Split(fullName, "/")
 		if len(parts) != 2 {
@@ -124,10 +119,15 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 			return handler(srv, ss)
 		}
 
-		logger = logger.With(
+		ctxLogger := logger.With(
 			"rpc.service", parts[0],
 			"rpc.method", parts[1],
 		)
+
+		traceID := trace.SpanContextFromContext(ctx).TraceID()
+		if traceID.IsValid() {
+			ctxLogger = ctxLogger.With("trace.id", traceID)
+		}
 
 		md, ok := metadata.FromIncomingContext(ctx)
 		if ok && options.requestHeaders {
@@ -135,11 +135,11 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 				if slices.Index(options.hideRequestHeaders, key) != -1 {
 					continue
 				}
-				logger = logger.With("rpc.grpc.request.metadata."+key, value)
+				ctxLogger = ctxLogger.With("rpc.grpc.request.metadata."+key, value)
 			}
 		}
 
-		ws.WrappedContext = ilog.ContextWithLogger(ctx, logger)
+		ws.WrappedContext = ilog.ContextWithLogger(ctx, ctxLogger)
 		err := handler(srv, ws)
 
 		logAttrs := []slog.Attr{}
@@ -156,7 +156,7 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 		level := options.codeToLevelFunc(st.Code())
 		logAttrs = append(logAttrs, slog.Int("rpc.grpc.status_code", int(st.Code())))
 
-		logger.LogAttrs(ctx, level, "request_end", logAttrs...)
+		ctxLogger.LogAttrs(ctx, level, "request_end", logAttrs...)
 
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/XSAM/otelsql"
 	// PostgreSQL databse driver.
 	_ "github.com/jackc/pgx/v5/stdlib"
 
@@ -34,7 +35,7 @@ func New(config config.DB) (Store, error) {
 		str += fmt.Sprintf(" %s=%s", k, v)
 	}
 
-	db, err := sql.Open("pgx", str)
+	db, err := otelsql.Open("pgx", str)
 	if err != nil {
 		return nil, err
 	}

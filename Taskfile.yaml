@@ -75,8 +75,14 @@ tasks:
     desc: Generate DB schema structs and queries
     cmd: sqlc generate
 
-  sql:migrations:new:
-    desc: Create a new migration file
+  sql:migrations:new:emtpy:
+    desc: Create a new empty migration file
+    aliases: [sql-new-empty]
+    cmd: atlas migrate new {{.CLI_ARGS}}
+
+  sql:migrations:new:from-schema:
+    desc: Create a new migration file based on the schema diff
+    aliases: [sql-new]
     cmds:
       - for: ["postgres", "postgres-dev"]
         task: sql:db:reset
@@ -95,6 +101,7 @@ tasks:
 
   sql:migrations:hash:
     desc: Re-calculate atlas.sum after a manual migrations change.
+    aliases: [sql-hash]
     cmd: atlas migrate hash --env local
 
   sql:db:reset:

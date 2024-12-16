@@ -12,7 +12,7 @@ func ContextWithLogger(ctx context.Context, logger *slog.Logger) context.Context
 }
 
 func FromContext(ctx context.Context) *slog.Logger {
-	if log, ok := ctx.Value(ctxKey{}).(*slog.Logger); !ok {
+	if log, ok := ctx.Value(ctxKey{}).(*slog.Logger); ok {
 		return log
 	}
 
