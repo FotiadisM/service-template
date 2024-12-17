@@ -21,8 +21,8 @@ import (
 
 	apiauthv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/config"
-	svcauthv1 "github.com/FotiadisM/mock-microservice/internal/services/auth/v1"
-	"github.com/FotiadisM/mock-microservice/internal/store"
+	"github.com/FotiadisM/mock-microservice/internal/db"
+	srvauthv1 "github.com/FotiadisM/mock-microservice/internal/services/auth/v1"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/health"
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logging"
@@ -44,14 +44,14 @@ func main() {
 	log := ilog.NewLogger()
 	slog.SetDefault(log)
 
-	store, err := store.New(config.DB)
+	db, err := db.New(config.DB)
 	if err != nil {
-		log.Error("failed to create store", ilog.Err(err.Error()))
+		log.Error("failed to create db", ilog.Err(err.Error()))
 		os.Exit(1)
 	}
 
-	svc := svcauthv1.NewService(store)
-	healthSvc := health.NewService()
+	srv := srvauthv1.NewService(db)
+	healthSrv := health.NewService()
 
 	validator, err := protovalidate.New()
 	if err != nil {
@@ -113,8 +113,8 @@ func main() {
 		MaxHeaderBytes:    config.Server.HTTP.MaxHeaderBytes,
 	}
 
-	apiauthv1.RegisterAuthServiceServer(grpcServer, svc)
-	healthv1.RegisterHealthServer(grpcServer, healthSvc)
+	apiauthv1.RegisterAuthServiceServer(grpcServer, srv)
+	healthv1.RegisterHealthServer(grpcServer, healthSrv)
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err = apiauthv1.RegisterAuthServiceHandlerFromEndpoint(ctx, mux, config.Server.GRPC.Addr, opts); err != nil {
 		log.Error("failed to register server", ilog.Err(err.Error()))
@@ -131,7 +131,7 @@ func main() {
 	go func() {
 		err = grpcServer.Serve(lis)
 		if err != nil {
-			log.Error("grpc serve failed", ilog.Err(err.Error()))
+			log.Error("gRPC server exited", ilog.Err(err.Error()))
 			os.Exit(1)
 		}
 	}()
@@ -140,7 +140,7 @@ func main() {
 	go func() {
 		err = httpServer.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error("http listen and serve failed", ilog.Err(err.Error()))
+			log.Error("http server exited", ilog.Err(err.Error()))
 			os.Exit(1)
 		}
 	}()

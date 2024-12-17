@@ -92,6 +92,7 @@ tasks:
 
   sql:migrations:apply:
     desc: Apply the migrations to the database.
+    aliases: [sql-apply]
     cmds:
       - for: ["postgres", "postgres-dev"]
         task: sql:db:reset

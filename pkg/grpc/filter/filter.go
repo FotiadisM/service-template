@@ -28,29 +28,29 @@ func MethodPrefix(pre string) Filter {
 
 func ServiceName(s string) Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := parseFullMethodName(fullMethodName)
-		return s == svc
+		srv, _ := parseFullMethodName(fullMethodName)
+		return s == srv
 	}
 }
 
 func ServicePrfix(pre string) Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := parseFullMethodName(fullMethodName)
-		return strings.HasPrefix(svc, pre)
+		srv, _ := parseFullMethodName(fullMethodName)
+		return strings.HasPrefix(srv, pre)
 	}
 }
 
 func HealthCheck() Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := parseFullMethodName(fullMethodName)
-		return svc == "grpc.health.v1.Health"
+		srv, _ := parseFullMethodName(fullMethodName)
+		return srv == "grpc.health.v1.Health"
 	}
 }
 
 func Reflection() Filter {
 	return func(fullMethodName string) bool {
-		svc, _ := parseFullMethodName(fullMethodName)
-		return (svc == "grpc.reflection.v1.ServerReflection" || svc == "grpc.reflection.v1alpha.ServerReflection")
+		srv, _ := parseFullMethodName(fullMethodName)
+		return (srv == "grpc.reflection.v1.ServerReflection" || srv == "grpc.reflection.v1alpha.ServerReflection")
 	}
 }
 

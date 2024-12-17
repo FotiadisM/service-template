@@ -1,11 +1,11 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema: "./internal/store/schema"
-    queries: "./internal/store/queries/"
+    schema: "./internal/db/schema"
+    queries: "./internal/db/queries/"
     gen:
       go:
         package: "repository"
-        out: "./internal/store/repository/"
+        out: "./internal/db/repository/"
         emit_interface: true
         emit_empty_slices: true

@@ -6,18 +6,18 @@ import (
 	health "google.golang.org/grpc/health/grpc_health_v1"
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
-	"github.com/FotiadisM/mock-microservice/internal/store"
+	"github.com/FotiadisM/mock-microservice/internal/db"
 )
 
 type Service struct {
-	store store.Store
+	db db.DB
 
 	authv1.UnimplementedAuthServiceServer
 	health.UnimplementedHealthServer
 }
 
-func NewService(st store.Store) *Service {
-	return &Service{store: st}
+func NewService(db db.DB) *Service {
+	return &Service{db: db}
 }
 
 func (s *Service) Check(_ context.Context, _ *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {

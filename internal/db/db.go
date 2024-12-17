@@ -1,9 +1,8 @@
-package store
+package db
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/XSAM/otelsql"
@@ -11,62 +10,62 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/store/repository"
+	"github.com/FotiadisM/mock-microservice/internal/db/repository"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
-type TxFn func(store Store) (err error)
+type TxFn func(db DB) (err error)
 
-type Store interface {
+type DB interface {
 	repository.Querier
 	Ping(ctx context.Context) error
 	WithTx(ctx context.Context, fn TxFn) error
 	WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error
 }
 
-type store struct {
+type db struct {
 	*sql.DB
 	*repository.Queries
 }
 
-func New(config config.DB) (Store, error) {
+func New(config config.DB) (DB, error) {
 	str := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", config.Host, config.Port, config.Username, config.Password, config.Database)
 	for k, v := range config.Params {
 		str += fmt.Sprintf(" %s=%s", k, v)
 	}
 
-	db, err := otelsql.Open("pgx", str)
+	conn, err := otelsql.Open("pgx", str)
 	if err != nil {
 		return nil, err
 	}
 
 	if config.MaxOpenConns > 0 {
-		db.SetMaxOpenConns(config.MaxOpenConns)
+		conn.SetMaxOpenConns(config.MaxOpenConns)
 	}
 	if config.MaxIdleConns > 0 {
-		db.SetMaxIdleConns(config.MaxIdleConns)
+		conn.SetMaxIdleConns(config.MaxIdleConns)
 	}
 	if config.ConnMaxLifetime > 0 {
-		db.SetConnMaxLifetime(config.ConnMaxLifetime)
+		conn.SetConnMaxLifetime(config.ConnMaxLifetime)
 	}
 
-	store := &store{
-		DB:      db,
-		Queries: repository.New(db),
+	db := &db{
+		DB:      conn,
+		Queries: repository.New(conn),
 	}
 
-	return store, nil
+	return db, nil
 }
 
-func (s *store) Ping(ctx context.Context) error {
+func (s *db) Ping(ctx context.Context) error {
 	return s.DB.PingContext(ctx)
 }
 
-func (s *store) WithTx(ctx context.Context, fn TxFn) error {
+func (s *db) WithTx(ctx context.Context, fn TxFn) error {
 	return s.WithConfiguredTx(ctx, nil, fn)
 }
 
-func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error {
+func (s *db) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error {
 	log := ilog.FromContext(ctx)
 
 	tx, err := s.DB.BeginTx(ctx, options)
@@ -78,20 +77,20 @@ func (s *store) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn
 	defer func() {
 		if p := recover(); p != nil {
 			log.Error("recovered from panic, rolling back transaction and panicking again")
-			if txErr := tx.Rollback(); txErr != nil {
+			if err = tx.Rollback(); err != nil {
 				log.Error("failed to roll back transaction", ilog.Err(err.Error()))
 			}
 			panic(p)
 		}
 	}()
 
-	err = fn(&store{
+	err = fn(&db{
 		DB:      s.DB,
 		Queries: s.Queries.WithTx(tx),
 	})
 	if err != nil {
 		if txErr := tx.Rollback(); txErr != nil {
-			err = errors.Join(err, fmt.Errorf("failed to roll back transaction: %w", txErr))
+			log.Error("failed to roll back transaction", ilog.Err(err.Error()))
 		}
 		return err
 	}
