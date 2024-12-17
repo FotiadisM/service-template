@@ -5,11 +5,12 @@ import (
 	"net"
 	"testing"
 
-	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
+
+	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 )
 
 const bufSize = 1024 * 1024

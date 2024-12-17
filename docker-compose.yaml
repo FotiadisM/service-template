@@ -4,8 +4,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: "local"
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "mock_microservice"
     volumes:
       - pgvolume:/var/lib/postgresql/data
 
@@ -14,8 +15,9 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_DB: "local"
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "mock_microservice"
     volumes:
       - pgvolume-dev:/var/lib/postgresql/data
 

@@ -13,11 +13,7 @@ type options struct {
 	// slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError
 	LogLevel slog.Level
 
-	// JSON enables structured logging output in json. Make sure to enable this
-	// in production mode so log aggregators can receive data in parsable format.
-	//
-	// In local development mode, its appropriate to set this value to false to
-	// receive pretty output and stacktraces to stdout.
+	// JSON enables structured logging output in json. Should be enabled in production
 	JSON bool
 
 	// LogLevelFieldName sets the field name for the log level or severity.
