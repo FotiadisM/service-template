@@ -69,7 +69,7 @@ type UnitTestingSuite struct {
 	Client authv1.AuthServiceClient
 }
 
-func (s *UnitTestingSuite) SetupSuite(t *suite.T) {
+func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 	t.Helper()
 
 	s.DB = mocks.NewMockDB(t)
@@ -99,7 +99,7 @@ func (s *UnitTestingSuite) SetupSuite(t *suite.T) {
 	s.Client = authv1.NewAuthServiceClient(s.conn)
 }
 
-func (s *UnitTestingSuite) TearDownSuite(t *suite.T) {
+func (s *UnitTestingSuite) TearDownSuite(t *testing.T) {
 	t.Helper()
 
 	err := s.conn.Close()
