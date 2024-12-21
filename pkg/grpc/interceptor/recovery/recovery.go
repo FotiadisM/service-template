@@ -3,7 +3,7 @@ package recovery
 import (
 	"context"
 	"fmt"
-	"runtime"
+	"runtime/debug"
 )
 
 type PanicError struct {
@@ -17,7 +17,5 @@ func (e *PanicError) Error() string {
 
 // DefaultRecoveryFunc will recover form panic p and return an err of type PanicError.
 func DefaultRecoveryFunc(_ context.Context, p any) error {
-	stack := make([]byte, 64<<10)
-	stack = stack[:runtime.Stack(stack, false)]
-	return &PanicError{Panic: p, Stack: stack}
+	return &PanicError{Panic: p, Stack: debug.Stack()}
 }

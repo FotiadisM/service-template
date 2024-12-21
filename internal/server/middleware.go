@@ -63,8 +63,8 @@ func (s *Server) newServerMiddleware(ctx context.Context) ([]grpc.ServerOption, 
 	}
 
 	ssi := []grpc.StreamServerInterceptor{
-		logging.StreamServerInterceptor(s.Log, logging.WithFilter(filter.Any(filter.Reflection(), filter.HealthCheck()))),
-		recovery.StreamServerInterceptor(),
+		logging.StreamServerInterceptor(s.Log, logging.WithFilter(filter.Any(filter.Reflection(), filter.HealthCheck()))), //nolint:contextcheck false positive
+		recovery.StreamServerInterceptor(), //nolint:contextcheck false positive
 		validate.StreamServerInterceptor(validator),
 	}
 

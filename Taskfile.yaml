@@ -46,7 +46,7 @@ tasks:
 
   go:test:
     desc: Test Go code.
-    cmd: gotestsum --format pkgname-and-test-fails -- -race -count=1 ./...
+    cmd: gotestsum -- -race ./...
 
   buf:fmt:
     desc: Format protobuf files.
