@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.35.2-20241127180247-a33202765966.1
-	github.com/XSAM/otelsql v0.35.0
+	github.com/XSAM/otelsql v0.36.0
 	github.com/bufbuild/protovalidate-go v0.8.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0
