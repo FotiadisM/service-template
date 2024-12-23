@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var matchMethod = flag.String("testify.m", "", "regular expression to select tests of the testify suite to run")
+var matchMethod = flag.String("suite.m", "", "regular expression to select tests of the suite to run")
 
 func failOnPanic(t *testing.T) {
 	t.Helper()
@@ -46,7 +46,7 @@ func Run(t *testing.T, suite interface{}) {
 
 		ok, err := methodFilter(method.Name)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "testify: invalid regexp for -m: %s\n", err)
+			fmt.Fprintf(os.Stderr, "suite: invalid regexp for -m: %s\n", err)
 			os.Exit(1)
 		}
 

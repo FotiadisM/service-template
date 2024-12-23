@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 	"github.com/FotiadisM/mock-microservice/internal/db/repository"
@@ -15,6 +16,7 @@ import (
 func (s *UnitTestingSuite) TestRegister(t *testing.T) {
 	ctx := context.Background()
 	assert := assert.New(t)
+	require := require.New(t)
 
 	s.DB.EXPECT().CreateUser(mock.Anything, mock.Anything).RunAndReturn(
 		func(_ context.Context, params repository.CreateUserParams) (repository.User, error) {
@@ -28,10 +30,13 @@ func (s *UnitTestingSuite) TestRegister(t *testing.T) {
 			}, nil
 		})
 
-	_, err := s.Client.Register(ctx, &authv1.RegisterRequest{
+	res, err := s.Client.Register(ctx, &authv1.RegisterRequest{
 		Email:    "test@mail.com",
 		Password: "1234",
 		UserType: authv1.UserType_USER_TYPE_APPLICANT,
 	})
-	assert.NoError(err)
+	require.NoError(err)
+
+	assert.NotZero(res.AccessToken)
+	assert.NotZero(res.RefreshToken)
 }

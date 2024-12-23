@@ -11,11 +11,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"github.com/FotiadisM/mock-microservice/internal/config"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
 type ServiceRegistrationFunc func(s grpc.ServiceRegistrar, mux *runtime.ServeMux) error
