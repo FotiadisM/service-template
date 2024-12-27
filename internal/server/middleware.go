@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc/stats"
 
 	"github.com/FotiadisM/mock-microservice/pkg/grpc/filter"
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/logging"
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/recovery"
-	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptor/validate"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptors/logging"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptors/recovery"
+	"github.com/FotiadisM/mock-microservice/pkg/grpc/interceptors/validate"
 )
 
 func otelgrpcFilter(ri *stats.RPCTagInfo) bool {
