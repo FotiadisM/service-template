@@ -36,7 +36,7 @@ func New(config config.DB) (DB, error) {
 
 	conn, err := otelsql.Open("pgx", str)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	if config.MaxOpenConns > 0 {

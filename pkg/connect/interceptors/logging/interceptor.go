@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
 const (

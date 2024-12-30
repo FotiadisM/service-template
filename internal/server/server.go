@@ -5,86 +5,103 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"connectrpc.com/connect"
+	"connectrpc.com/grpchealth"
+	"connectrpc.com/grpcreflect"
+	"connectrpc.com/otelconnect"
+	"connectrpc.com/validate"
+	"connectrpc.com/vanguard"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 
+	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/config"
+	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
-type ServiceRegistrationFunc func(s grpc.ServiceRegistrar, mux *runtime.ServeMux) error
-
 type Server struct {
-	Log    *slog.Logger
-	Config *config.Config
+	log *slog.Logger
 
-	ServerRegistrationFunc ServiceRegistrationFunc
-
-	grpcServer *grpc.Server
-	httpServer *http.Server
+	config *config.Config
+	server *http.Server
 
 	otelShutDownFunc otelShutDownFunc
 }
 
-func (s *Server) Start(ctx context.Context) error {
-	grpcOpts, err := s.newServerMiddleware(ctx)
+func NewServer(config *config.Config, log *slog.Logger, svc authv1connect.AuthServiceHandler, checker grpchealth.Checker) (*Server, error) {
+	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
-		return fmt.Errorf("failed to create grpc server options: %w", err)
+		return nil, fmt.Errorf("failed to create otel interceptor: %w", err)
 	}
-
-	s.grpcServer = grpc.NewServer(grpcOpts...)
-	if s.Config.Server.GRPC.Reflection {
-		reflection.Register(s.grpcServer)
-		s.Log.Info("enabled grpc reflection")
-	}
-
-	mux := runtime.NewServeMux()
-	s.httpServer = &http.Server{
-		Addr:              s.Config.Server.HTTP.Addr,
-		Handler:           mux,
-		ReadTimeout:       s.Config.Server.HTTP.ReadTimeout,
-		ReadHeaderTimeout: s.Config.Server.HTTP.ReadHeaderTimeout,
-		WriteTimeout:      s.Config.Server.HTTP.WriteTimeout,
-		IdleTimeout:       s.Config.Server.HTTP.IdleTimeout,
-		MaxHeaderBytes:    s.Config.Server.HTTP.MaxHeaderBytes,
-	}
-
-	err = s.ServerRegistrationFunc(s.grpcServer, mux)
+	validationInterceptor, err := validate.NewInterceptor()
 	if err != nil {
-		return fmt.Errorf("failed to register services %w", err)
+		return nil, fmt.Errorf("failed to create validation interceptor: %w", err)
 	}
+	loggingInterceptor := logging.NewInterceptor(log)
 
-	lis, err := net.Listen("tcp", s.Config.Server.GRPC.Addr)
-	if err != nil {
-		return fmt.Errorf("failed to create net.Listener: %w", err)
-	}
+	mux := http.NewServeMux()
+	mux.Handle(grpchealth.NewHandler(checker))
 
-	s.Log.Info("grpc server is listening", "port", s.Config.Server.GRPC.Addr)
-	go func() {
-		err = s.grpcServer.Serve(lis)
+	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(svc,
+		connect.WithInterceptors(otelInterceptor, loggingInterceptor, validationInterceptor),
+	)
+
+	if config.Server.HTTP.DisableRESTTranscoding {
+		mux.Handle(svcPath, svcHandler)
+	} else {
+		vanguardSvc := vanguard.NewService(svcPath, svcHandler)
+		transcoder, err := vanguard.NewTranscoder([]*vanguard.Service{vanguardSvc})
 		if err != nil {
-			s.Log.Error("gRPC server exited", ilog.Err(err.Error()))
-			os.Exit(1)
+			return nil, fmt.Errorf("failed to create vanguard transcoder: %w", err)
 		}
-	}()
+		mux.Handle("/", transcoder)
+		log.Info("enabled http rest transcoding")
+	}
 
-	s.Log.Info("http server is listening", "port", s.Config.Server.HTTP.Addr)
+	if config.Server.HTTP.Reflection {
+		reflector := grpcreflect.NewStaticReflector(authv1connect.AuthServiceName)
+		mux.Handle(grpcreflect.NewHandlerV1(reflector))
+		mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
+		log.Info("enabled server reflection")
+	}
+
+	httpServer := &http.Server{
+		Addr:              config.Server.HTTP.Addr,
+		Handler:           h2c.NewHandler(mux, &http2.Server{}),
+		ReadTimeout:       config.Server.HTTP.ReadTimeout,
+		ReadHeaderTimeout: config.Server.HTTP.ReadHeaderTimeout,
+		WriteTimeout:      config.Server.HTTP.WriteTimeout,
+		IdleTimeout:       config.Server.HTTP.IdleTimeout,
+		MaxHeaderBytes:    config.Server.HTTP.MaxHeaderBytes,
+	}
+
+	server := &Server{
+		log:    log,
+		config: config,
+		server: httpServer,
+		otelShutDownFunc: func(_ context.Context) error {
+			return nil
+		},
+	}
+
+	return server, nil
+}
+
+func (s *Server) Start() {
+	s.log.Info("http server is listening", "addr", s.config.Server.HTTP.Addr)
 	go func() {
-		err = s.httpServer.ListenAndServe()
+		err := s.server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			s.Log.Error("http server exited", ilog.Err(err.Error()))
+			s.log.Error("http server exited", ilog.Err(err.Error()))
 			os.Exit(1)
 		}
 	}()
-
-	return nil
 }
 
 func (s *Server) AwaitShutdown(ctx context.Context) {
@@ -92,17 +109,11 @@ func (s *Server) AwaitShutdown(ctx context.Context) {
 	signal.Notify(interruptSignal, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	<-interruptSignal
-	s.Log.Info("shuting down")
-	timer, cancel := context.WithTimeout(ctx, s.Config.Server.HTTP.ShutdownTimeout)
+	s.log.Info("shuting down")
+	timer, cancel := context.WithTimeout(ctx, s.config.Server.HTTP.ShutdownTimeout)
 	defer cancel()
-	err := s.httpServer.Shutdown(timer)
+	err := s.server.Shutdown(timer)
 	if err != nil {
-		s.Log.Error("failed to shutdown http server", ilog.Err(err.Error()))
-	}
-	s.grpcServer.GracefulStop()
-
-	err = s.otelShutDownFunc(ctx)
-	if err != nil {
-		s.Log.Error("failed to shutdown otel exporter", ilog.Err(err.Error()))
+		s.log.Error("failed to shutdown http server", ilog.Err(err.Error()))
 	}
 }

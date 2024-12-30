@@ -40,7 +40,14 @@ type GRPC struct {
 }
 
 type HTTP struct {
-	Addr string `env:"ADDR, default=:8085"`
+	Addr string `env:"ADDR, default=:8080"`
+
+	// Reflection enables gRPC compatible server reflection
+	Reflection bool `env:"REFLECTION"`
+	// DisableRESTTranscoding disable HTTP JSON+REST to RPC transcoding.
+	// It support Google's HTTP transcoding options.
+	DisableRESTTranscoding bool `env:"DISABLE_REST_TRANSCODING"`
+
 	// ReadTimeout sets the maximum time a client has to fully stream a request (5s).
 	ReadTimeout time.Duration `env:"READ_TIMEOUT, default=5s"`
 	// WriteTimeout sets the maximum amount of time a handler has to fully process a request (10s).
@@ -59,15 +66,14 @@ type HTTP struct {
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT, default=5s"`
 }
 
-type OTEL struct {
-	SDKDisabled  bool   `env:"SDK_DISABLED"`
-	ExporterAddr string `env:"EXPORTER_ADDR"`
+type Instrumentation struct {
+	OtelExporterAddr string `env:"OTEL_EXPORTER_ADDR"`
+	OtelSDKDisabled  bool   `env:"OTEL_SDK_DISABLED"`
 }
 
 type Server struct {
-	GRPC GRPC `env:", prefix=GRPC_SERVER_"`
+	Inst Instrumentation
 	HTTP HTTP `env:", prefix=HTTPP_SERVER_"`
-	OTEL OTEL `env:", prefix=OTEL_"`
 }
 
 type Config struct {
