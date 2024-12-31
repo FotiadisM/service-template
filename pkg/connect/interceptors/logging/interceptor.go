@@ -79,18 +79,23 @@ func procedureAttributes(procedure string) []any {
 }
 
 type Interceptor struct {
+	opts   *options
 	logger *slog.Logger
 }
 
 var _ connect.Interceptor = &Interceptor{}
 
-func NewInterceptor(logger *slog.Logger) *Interceptor {
-	return &Interceptor{logger: logger}
+func NewInterceptor(logger *slog.Logger, opts ...Option) *Interceptor {
+	options := defaultOptions()
+	for _, fn := range opts {
+		fn(options)
+	}
+	return &Interceptor{opts: options, logger: logger}
 }
 
 func (i *Interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-		if req.Spec().IsClient {
+		if req.Spec().IsClient || !i.opts.filterFunc(ctx, req.Spec()) {
 			return next(ctx, req)
 		}
 
@@ -114,9 +119,9 @@ func (i *Interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		logAttrs = append(logAttrs, addressAttributes(req.Peer().Addr)...)
 		if err != nil {
 			if connectErr := new(connect.Error); errors.As(err, &connectErr) {
-				level = DefaultCodeToLevelFunc(connectErr.Code())
+				level = i.opts.codeToLevelFunc(connectErr.Code())
 				logAttrs = append(logAttrs, ilog.Err(connectErr.Message()))
-				logAttrs = append(logAttrs, DefaultErrorDetailsAttrFunc(connectErr.Details())...)
+				logAttrs = append(logAttrs, i.opts.errorDetailsAttrFunc(connectErr.Details())...)
 			} else {
 				level = slog.LevelError
 				logAttrs = append(logAttrs, ilog.Err(err.Error()))
@@ -139,6 +144,10 @@ func (i *Interceptor) WrapStreamingClient(next connect.StreamingClientFunc) conn
 
 func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		if !i.opts.filterFunc(ctx, conn.Spec()) {
+			return next(ctx, conn)
+		}
+
 		ctxLogger := i.logger.With(procedureAttributes(conn.Spec().Procedure)...)
 
 		span := trace.SpanContextFromContext(ctx)
@@ -159,9 +168,9 @@ func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) co
 		logAttrs = append(logAttrs, addressAttributes(conn.Peer().Addr)...)
 		if err != nil {
 			if connectErr := new(connect.Error); errors.As(err, &connectErr) {
-				level = DefaultCodeToLevelFunc(connectErr.Code())
+				level = i.opts.codeToLevelFunc(connectErr.Code())
 				logAttrs = append(logAttrs, ilog.Err(connectErr.Message()))
-				logAttrs = append(logAttrs, DefaultErrorDetailsAttrFunc(connectErr.Details())...)
+				logAttrs = append(logAttrs, i.opts.errorDetailsAttrFunc(connectErr.Details())...)
 			} else {
 				level = slog.LevelError
 				logAttrs = append(logAttrs, ilog.Err(err.Error()))

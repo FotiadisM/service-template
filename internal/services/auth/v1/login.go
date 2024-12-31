@@ -10,8 +10,10 @@ import (
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
 )
 
+var ErrHello = errors.New("hello I am an error")
+
 func (s *Service) Login(_ context.Context, _ *connect.Request[authv1.LoginRequest]) (*connect.Response[authv1.LoginResponse], error) {
-	err := connect.NewError(connect.CodeInternal, errors.New("hello: I am error"))
+	err := connect.NewError(connect.CodeInternal, ErrHello)
 	details, detailsErr := connect.NewErrorDetail(&errdetails.ErrorInfo{
 		Reason:   "reason",
 		Domain:   "domain",
@@ -21,10 +23,6 @@ func (s *Service) Login(_ context.Context, _ *connect.Request[authv1.LoginReques
 		panic(detailsErr)
 	}
 	err.AddDetail(details)
-	// err := errors.NewInfoError(codes.Internal, "MY_CUSTOM-CODE", "Unexpected error", map[string]string{
-	// 	"one":   "two",
-	// 	"three": "four",
-	// })
 
 	return nil, err
 }

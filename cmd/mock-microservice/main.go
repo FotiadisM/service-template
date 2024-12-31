@@ -32,6 +32,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	if !config.Server.Inst.OtelSDKDisabled {
+		var shutdownFunc otelShutDownFunc
+		shutdownFunc, err = initializeOTEL(ctx, log, config.Server.Inst.OtelExporterAddr)
+		if err != nil {
+			log.Error("failed to initialize otel SDK", ilog.Err(err.Error()))
+		}
+		defer func() {
+			err = shutdownFunc(ctx)
+			if err != nil {
+				log.Error("failed to shutdown otel", ilog.Err(err.Error()))
+			}
+		}()
+	}
+
 	checker := &checker{
 		DB: db,
 	}

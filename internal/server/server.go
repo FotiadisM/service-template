@@ -13,15 +13,12 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/grpchealth"
 	"connectrpc.com/grpcreflect"
-	"connectrpc.com/otelconnect"
-	"connectrpc.com/validate"
 	"connectrpc.com/vanguard"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
@@ -30,26 +27,19 @@ type Server struct {
 
 	config *config.Config
 	server *http.Server
-
-	otelShutDownFunc otelShutDownFunc
 }
 
 func NewServer(config *config.Config, log *slog.Logger, svc authv1connect.AuthServiceHandler, checker grpchealth.Checker) (*Server, error) {
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	interceptors, err := createInterceptors(log)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create otel interceptor: %w", err)
+		return nil, fmt.Errorf("failed to create interceptors: %w", err)
 	}
-	validationInterceptor, err := validate.NewInterceptor()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create validation interceptor: %w", err)
-	}
-	loggingInterceptor := logging.NewInterceptor(log)
 
 	mux := http.NewServeMux()
 	mux.Handle(grpchealth.NewHandler(checker))
 
 	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(svc,
-		connect.WithInterceptors(otelInterceptor, loggingInterceptor, validationInterceptor),
+		connect.WithInterceptors(interceptors...),
 	)
 
 	if config.Server.HTTP.DisableRESTTranscoding {
@@ -85,9 +75,6 @@ func NewServer(config *config.Config, log *slog.Logger, svc authv1connect.AuthSe
 		log:    log,
 		config: config,
 		server: httpServer,
-		otelShutDownFunc: func(_ context.Context) error {
-			return nil
-		},
 	}
 
 	return server, nil

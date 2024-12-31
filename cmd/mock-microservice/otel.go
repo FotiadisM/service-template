@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"context"
@@ -69,6 +69,8 @@ func initializeOTEL(ctx context.Context, log *slog.Logger, exporterAddr string) 
 		err := tracerProvider.Shutdown(ctx)
 		return errors.Join(err, meterProvider.Shutdown(ctx))
 	}
+
+	log.Info("initialized OTEL SDK")
 
 	return fn, nil
 }
