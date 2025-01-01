@@ -7,8 +7,6 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/vanguard"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 
 	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/db/mocks"
@@ -41,7 +39,10 @@ func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.Handle("/", transcoder)
 
-	s.server = httptest.NewServer(h2c.NewHandler(mux, &http2.Server{}))
+	s.server = httptest.NewUnstartedServer(mux)
+	s.server.EnableHTTP2 = true
+	s.server.StartTLS()
+
 	s.Client = authv1connect.NewAuthServiceClient(s.server.Client(), s.server.URL)
 }
 
