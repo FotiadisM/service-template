@@ -17,6 +17,10 @@ type options struct {
 	filterFunc           FilterFunc
 	codeToLevelFunc      CodeToLevelFunc
 	errorDetailsAttrFunc ErrorDetailsAttrFunc
+
+	withPeer             bool
+	withRequestsHeaders  bool
+	hiddenRequestHeaders []string
 }
 
 func defaultOptions() *options {
@@ -24,6 +28,9 @@ func defaultOptions() *options {
 		filterFunc:           func(_ context.Context, _ connect.Spec) bool { return true },
 		codeToLevelFunc:      DefaultCodeToLevelFunc,
 		errorDetailsAttrFunc: DefaultErrorDetailsAttrFunc,
+		withPeer:             true,
+		withRequestsHeaders:  false,
+		hiddenRequestHeaders: []string{"Authorization"},
 	}
 }
 
@@ -44,5 +51,23 @@ func WithCodeToLevelFunc(f CodeToLevelFunc) Option {
 func WithErrorDetailsAttrFunc(f ErrorDetailsAttrFunc) Option {
 	return func(o *options) {
 		o.errorDetailsAttrFunc = f
+	}
+}
+
+func WithPeer(enabled bool) Option {
+	return func(o *options) {
+		o.withPeer = enabled
+	}
+}
+
+func WithRequestsHeaders(enabled bool) Option {
+	return func(o *options) {
+		o.withRequestsHeaders = enabled
+	}
+}
+
+func WithHiddenRequestHeaders(headers []string) Option {
+	return func(o *options) {
+		o.hiddenRequestHeaders = headers
 	}
 }

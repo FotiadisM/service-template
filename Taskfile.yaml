@@ -28,6 +28,11 @@ tasks:
     deps:
       - go:test
 
+  test-watch:
+    desc: Watch for file changes and run tests
+    deps:
+      - go:test-watch
+
   go:fmt:
     desc: Format Go code.
     cmds:
@@ -46,7 +51,11 @@ tasks:
 
   go:test:
     desc: Test Go code.
-    cmd: gotestsum -- -race ./...
+    cmd: gotestsum -- -race -cover ./...
+
+  go:test-watch:
+    desc: Test Go code.
+    cmd: gotestsum --watch -- -race ./...
 
   buf:fmt:
     desc: Format protobuf files.

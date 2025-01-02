@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net"
+	"slices"
 	"strings"
 	"time"
 
@@ -116,7 +117,9 @@ func (i *Interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 			protocolAttribute(req.Peer().Protocol),
 			slog.Int64(serverDurationKey, duration.Milliseconds()),
 		}
-		logAttrs = append(logAttrs, addressAttributes(req.Peer().Addr)...)
+		if i.opts.withPeer {
+			logAttrs = append(logAttrs, addressAttributes(req.Peer().Addr)...)
+		}
 		if err != nil {
 			if connectErr := new(connect.Error); errors.As(err, &connectErr) {
 				level = i.opts.codeToLevelFunc(connectErr.Code())
@@ -128,8 +131,13 @@ func (i *Interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 			}
 		}
 
-		for k, v := range req.Header() {
-			logAttrs = append(logAttrs, slog.Any(metadataPrefixKey+strings.ToLower(k), v))
+		if i.opts.withRequestsHeaders {
+			for k, v := range req.Header() {
+				if slices.Index(i.opts.hiddenRequestHeaders, k) != -1 {
+					continue
+				}
+				logAttrs = append(logAttrs, slog.Any(metadataPrefixKey+strings.ToLower(k), v))
+			}
 		}
 
 		ctxLogger.LogAttrs(ctx, level, "request_end", logAttrs...)
@@ -165,7 +173,9 @@ func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) co
 			protocolAttribute(conn.Peer().Protocol),
 			slog.Int64(serverDurationKey, duration.Milliseconds()),
 		}
-		logAttrs = append(logAttrs, addressAttributes(conn.Peer().Addr)...)
+		if i.opts.withPeer {
+			logAttrs = append(logAttrs, addressAttributes(conn.Peer().Addr)...)
+		}
 		if err != nil {
 			if connectErr := new(connect.Error); errors.As(err, &connectErr) {
 				level = i.opts.codeToLevelFunc(connectErr.Code())
@@ -177,8 +187,13 @@ func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) co
 			}
 		}
 
-		for k, v := range conn.RequestHeader() {
-			logAttrs = append(logAttrs, slog.Any(metadataPrefixKey+strings.ToLower(k), v))
+		if i.opts.withRequestsHeaders {
+			for k, v := range conn.RequestHeader() {
+				if slices.Index(i.opts.hiddenRequestHeaders, k) != -1 {
+					continue
+				}
+				logAttrs = append(logAttrs, slog.Any(metadataPrefixKey+strings.ToLower(k), v))
+			}
 		}
 
 		ctxLogger.LogAttrs(ctx, level, "request_end", logAttrs...)

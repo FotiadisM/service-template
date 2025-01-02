@@ -16,6 +16,7 @@ message RegisterRequest {
   string password = 2 [(buf.validate.field).string.min_len = 8];
   UserType user_type = 3 [(buf.validate.field).enum = {
     not_in: [0]
+    defined_only: true
   }];
 }
 

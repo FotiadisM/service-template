@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+	"connectrpc.com/validate"
 	"connectrpc.com/vanguard"
 
 	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
@@ -26,15 +27,19 @@ func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 	s.DB = mocks.NewMockDB(t)
 	svc := &Service{db: s.DB}
 
+	validationInterceptor, err := validate.NewInterceptor()
+	if err != nil {
+		t.Errorf("failed to create validation interceptor: %v", err)
+	}
+
 	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(svc,
-		connect.WithInterceptors(),
+		connect.WithInterceptors(validationInterceptor),
 	)
 
 	vanguardSvc := vanguard.NewService(svcPath, svcHandler)
 	transcoder, err := vanguard.NewTranscoder([]*vanguard.Service{vanguardSvc})
 	if err != nil {
 		t.Errorf("failed to create vanguard transcoder: %v", err)
-		t.FailNow()
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/", transcoder)
