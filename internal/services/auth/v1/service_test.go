@@ -10,16 +10,16 @@ import (
 	"strings"
 	"testing"
 
+	"ariga.io/atlas-go-sdk/atlasexec"
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 	"connectrpc.com/vanguard"
+	"github.com/stretchr/testify/require"
 
-	"ariga.io/atlas-go-sdk/atlasexec"
 	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/db"
 	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries/mocks"
 	"github.com/FotiadisM/mock-microservice/pkg/suite"
-	"github.com/stretchr/testify/require"
 )
 
 type unitTestingSuiteInternal struct {
