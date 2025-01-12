@@ -10,25 +10,16 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/db/repository"
+	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
-type TxFn func(db DB) (err error)
-
-type DB interface {
-	repository.Querier
-	Ping(ctx context.Context) error
-	WithTx(ctx context.Context, fn TxFn) error
-	WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error
+type DB struct {
+	DB *sql.DB
+	*queries.Queries
 }
 
-type db struct {
-	*sql.DB
-	*repository.Queries
-}
-
-func New(config config.DB) (DB, error) {
+func New(config config.DB) (*DB, error) {
 	str := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", config.Host, config.Port, config.Username, config.Password, config.Database)
 	for k, v := range config.Params {
 		str += fmt.Sprintf(" %s=%s", k, v)
@@ -49,26 +40,33 @@ func New(config config.DB) (DB, error) {
 		conn.SetConnMaxLifetime(config.ConnMaxLifetime)
 	}
 
-	db := &db{
+	db := &DB{
 		DB:      conn,
-		Queries: repository.New(conn),
+		Queries: queries.New(conn),
 	}
 
 	return db, nil
 }
 
-func (s *db) Ping(ctx context.Context) error {
-	return s.DB.PingContext(ctx)
+func NewFromDBConn(conn *sql.DB) (*DB, error) {
+	db := &DB{
+		DB:      conn,
+		Queries: queries.New(conn),
+	}
+
+	return db, nil
 }
 
-func (s *db) WithTx(ctx context.Context, fn TxFn) error {
-	return s.WithConfiguredTx(ctx, nil, fn)
+type TxFn func(db *DB) (err error)
+
+func WithTx(ctx context.Context, db *DB, fn TxFn) error {
+	return WithConfiguredTx(ctx, db, nil, fn)
 }
 
-func (s *db) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn TxFn) error {
+func WithConfiguredTx(ctx context.Context, db *DB, options *sql.TxOptions, fn TxFn) error {
 	log := ilog.FromContext(ctx)
 
-	tx, err := s.DB.BeginTx(ctx, options)
+	tx, err := db.DB.BeginTx(ctx, options)
 	if err != nil {
 		log.Error("failed to begin transaction", ilog.Err(err.Error()))
 		return err
@@ -84,9 +82,9 @@ func (s *db) WithConfiguredTx(ctx context.Context, options *sql.TxOptions, fn Tx
 		}
 	}()
 
-	err = fn(&db{
-		DB:      s.DB,
-		Queries: s.Queries.WithTx(tx),
+	err = fn(&DB{
+		DB:      db.DB,
+		Queries: db.Queries.WithTx(tx),
 	})
 	if err != nil {
 		if txErr := tx.Rollback(); txErr != nil {

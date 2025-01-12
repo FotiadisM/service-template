@@ -2,19 +2,18 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpchealth"
-
-	"github.com/FotiadisM/mock-microservice/internal/db"
 )
 
 var errUnknownService = errors.New("unknown service")
 
 type checker struct {
-	DB db.DB
+	DB *sql.DB
 }
 
 var _ grpchealth.Checker = &checker{}
@@ -41,7 +40,7 @@ func (c *checker) Check(ctx context.Context, req *grpchealth.CheckRequest) (*grp
 }
 
 func (c *checker) livenessProbe(ctx context.Context) (*grpchealth.CheckResponse, error) {
-	err := c.DB.Ping(ctx)
+	err := c.DB.PingContext(ctx)
 	if err != nil {
 		return &grpchealth.CheckResponse{Status: grpchealth.StatusNotServing}, nil //nolint
 	}

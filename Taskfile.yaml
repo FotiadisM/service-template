@@ -19,7 +19,6 @@ tasks:
   gen:
     desc: Generate code.
     deps:
-      - go:gen
       - buf:gen
       - sql:gen
 
@@ -44,10 +43,6 @@ tasks:
     cmds:
       - go vet ./...
       - golangci-lint run
-
-  go:gen:
-    desc: Generate Go code.
-    cmd: go generate ./...
 
   go:test:
     desc: Test Go code.
@@ -82,7 +77,9 @@ tasks:
 
   sql:gen:
     desc: Generate DB schema structs and queries
-    cmd: sqlc generate
+    cmds:
+      - sqlc generate
+      - mockery
 
   sql:migrations:new:emtpy:
     desc: Create a new empty migration file

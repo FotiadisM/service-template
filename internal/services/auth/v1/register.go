@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
-	"github.com/FotiadisM/mock-microservice/internal/db/repository"
+	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 
@@ -19,11 +19,11 @@ func (s *Service) Register(ctx context.Context, req *connect.Request[authv1.Regi
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.db.CreateUser(ctx, repository.CreateUserParams{
+	_, err = s.db.CreateUser(ctx, queries.CreateUserParams{
 		ID:       id,
 		Email:    req.Msg.Email,
 		Password: req.Msg.Password,
-		Scope:    repository.UserScopeUser,
+		Scope:    queries.UserScopeUser,
 	})
 	if err != nil {
 		return nil, err

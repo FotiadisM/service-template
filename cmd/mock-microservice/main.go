@@ -14,8 +14,6 @@ import (
 	"github.com/FotiadisM/mock-microservice/pkg/version"
 )
 
-//go:generate mockery
-
 func main() {
 	version.AddFlag(nil)
 	flag.Parse()
@@ -47,7 +45,7 @@ func main() {
 	}
 
 	checker := &checker{
-		DB: db,
+		DB: db.DB,
 	}
 	svc := authv1.NewService(db)
 

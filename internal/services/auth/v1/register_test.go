@@ -10,19 +10,16 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/FotiadisM/mock-microservice/internal/db/repository"
-
 	authv1 "github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1"
+	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries"
 )
 
 func (s *UnitTestingSuite) TestRegister(t *testing.T) {
 	ctx := context.Background()
-	assert := assert.New(t)
-	require := require.New(t)
 
 	s.DB.EXPECT().CreateUser(mock.Anything, mock.Anything).RunAndReturn(
-		func(_ context.Context, params repository.CreateUserParams) (repository.User, error) {
-			return repository.User{
+		func(_ context.Context, params queries.CreateUserParams) (queries.User, error) {
+			return queries.User{
 				ID:        params.ID,
 				Email:     params.Email,
 				Password:  params.Password,
@@ -39,10 +36,10 @@ func (s *UnitTestingSuite) TestRegister(t *testing.T) {
 	})
 
 	res, err := s.Client.Register(ctx, req)
-	require.NoError(err)
+	require.NoError(t, err)
 
-	assert.NotZero(res.Msg.AccessToken)
-	assert.NotZero(res.Msg.RefreshToken)
+	assert.NotZero(t, res.Msg.AccessToken)
+	assert.NotZero(t, res.Msg.RefreshToken)
 }
 
 func (s *UnitTestingSuite) TestRegisterValidation(t *testing.T) {
@@ -114,4 +111,22 @@ func (s *UnitTestingSuite) TestRegisterValidation(t *testing.T) {
 			assert.NotEmpty(t, connectErr.Details())
 		})
 	}
+}
+
+func (s *EndpointTestingSuite) TestOne(t *testing.T) {
+	ctx := context.Background()
+
+	email := "test@mail.com"
+	password := "0123456789"
+	req := connect.NewRequest(&authv1.RegisterRequest{
+		Email:    email,
+		Password: password,
+		UserType: authv1.UserType_USER_TYPE_APPLICANT,
+	})
+
+	res, err := s.Client.Register(ctx, req)
+	require.NoError(t, err)
+
+	assert.NotZero(t, res.Msg.AccessToken)
+	assert.NotZero(t, res.Msg.RefreshToken)
 }

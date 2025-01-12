@@ -3,6 +3,6 @@ dir: "{{.InterfaceDir}}/mocks"
 filename: "{{.InterfaceNameSnake}}.go"
 outpkg: "mocks"
 packages:
-  github.com/FotiadisM/mock-microservice/internal/db:
+  github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries:
     interfaces:
-      DB:
+      Querier:

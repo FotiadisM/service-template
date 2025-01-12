@@ -1,21 +1,13 @@
 package authv1
 
 import (
-	"github.com/FotiadisM/mock-microservice/internal/db"
+	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries"
 )
 
 type Service struct {
-	db db.DB
-
-	// health.UnimplementedHealthServer
+	db queries.Querier
 }
 
-func NewService(db db.DB) *Service {
+func NewService(db queries.Querier) *Service {
 	return &Service{db: db}
 }
-
-// func (s *Service) Check(_ context.Context, _ *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
-// 	res := &health.HealthCheckResponse{}
-// 	res.Status = health.HealthCheckResponse_SERVING
-// 	return res, nil
-// }
