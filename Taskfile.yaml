@@ -2,7 +2,7 @@ version: "3"
 
 tasks:
   fmt:
-    desc: Format code.
+    desc: Format code
     deps:
       - go:fmt
       - buf:fmt
@@ -10,14 +10,14 @@ tasks:
       - config:fmt
 
   lint:
-    desc: Lint code.
+    desc: Lint code
     deps:
       - go:lint
       - buf:lint
       - sql:lint
 
   gen:
-    desc: Generate code.
+    desc: Generate code (protobuf files, DB schema and queries, mocks)
     deps:
       - buf:gen
       - sql:gen
@@ -27,59 +27,56 @@ tasks:
     deps:
       - go:test
 
-  test-watch:
-    desc: Watch for file changes and run tests
-    deps:
-      - go:test-watch
-
   go:fmt:
-    desc: Format Go code.
+    desc: Format Go code
     cmds:
       - gofumpt -w .
       - goimports -local $(go list -m) -w .
 
   go:lint:
-    desc: Lint Go code.
+    desc: Lint Go code
     cmds:
       - go vet ./...
       - golangci-lint run
 
   go:test:
-    desc: Test Go code.
+    desc: Test Go code
     cmd: gotestsum -- -race -cover ./...
 
   go:test-watch:
-    desc: Test Go code.
+    desc: Watch for file changes and run tests
     cmd: gotestsum --watch -- -race ./...
+    aliases:
+      - test-watch
 
   buf:fmt:
-    desc: Format protobuf files.
+    desc: Format protobuf files
     cmd: buf format -w
 
   buf:lint:
-    desc: Lint protobuf files.
+    desc: Lint protobuf files
     cmd: buf lint ./api/proto
 
   buf:gen:
-    desc: Generate code from protobuf files.
+    desc: Generate code from protobuf files
     cmd: buf generate ./api/proto
 
   sql:fmt:
-    desc: Format sql code.
+    desc: Format sql code
     cmds:
       - atlas schema fmt
       - sqlfluff format -d postgres
       - task: sql:migrations:hash
 
   sql:lint:
-    desc: Lint sql code.
+    desc: Lint sql code
     cmd: atlas migrate lint --env local --latest 1
 
   sql:gen:
     desc: Generate DB schema structs and queries
     cmds:
       - sqlc generate
-      - mockery
+      - task: mocks:gen
 
   sql:migrations:new:emtpy:
     desc: Create a new empty migration file
@@ -97,7 +94,7 @@ tasks:
       - atlas migrate diff --env local {{.CLI_ARGS}}
 
   sql:migrations:apply:
-    desc: Apply the migrations to the database.
+    desc: Apply the migrations to the database
     aliases: [sql-apply]
     cmds:
       - for: ["postgres", "postgres-dev"]
@@ -107,7 +104,7 @@ tasks:
       - atlas migrate apply --env local
 
   sql:migrations:hash:
-    desc: Re-calculate atlas.sum after a manual migrations change.
+    desc: Re-calculate atlas.sum after a manual migrations change
     aliases: [sql-hash]
     cmd: atlas migrate hash --env local
 
@@ -119,6 +116,10 @@ tasks:
       - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "DROP DATABASE IF EXISTS $PSQL_DBNAME;"
       - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "CREATE DATABASE $PSQL_DBNAME;"
 
+  mocks:gen:
+    desc: Generate mocks
+    cmd: mockery
+
   config:fmt:
-    desc: Format all config files
+    desc: Format config files
     cmd: prettier --write .
