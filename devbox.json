@@ -1,16 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.13.6/.schema/devbox.schema.json",
   "packages": [
-    "buf@1.47.0",
-    "golangci-lint@1.62.2",
+    "buf@1.48.0",
+    "golangci-lint@1.63.1",
     "gotestsum@latest",
     "sqlc@1.27.0",
     "gofumpt@latest",
     "go-task@latest",
-    "atlas@0.29.0",
-    "go-mockery@2.46.3",
+    "atlas@0.30.0",
+    "go-mockery@2.50.1",
     "sqlfluff@latest",
-    "delve@1.23.1",
+    "delve@1.24.0",
     "grpcui@latest",
     "nodePackages.prettier@latest"
   ],

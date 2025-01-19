@@ -17,7 +17,7 @@ tasks:
       - sql:lint
 
   gen:
-    desc: Generate code (protobuf files, DB schema and queries, mocks)
+    desc: Generate code (protobuf files, DB schema structs, queries, and mocks)
     deps:
       - buf:gen
       - sql:gen
@@ -45,7 +45,7 @@ tasks:
 
   go:test-watch:
     desc: Watch for file changes and run tests
-    cmd: gotestsum --watch -- -race ./...
+    cmd: gotestsum --format testname --watch -- -race
     aliases:
       - test-watch
 

@@ -6,19 +6,20 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
-	"ariga.io/atlas-go-sdk/atlasexec"
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 	"connectrpc.com/vanguard"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
-	"github.com/FotiadisM/mock-microservice/internal/db"
+	"github.com/FotiadisM/mock-microservice/internal/database"
 	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries/mocks"
+	"github.com/FotiadisM/mock-microservice/internal/test"
 	"github.com/FotiadisM/mock-microservice/pkg/suite"
 )
 
@@ -77,13 +78,15 @@ func (s *UnitTestingSuite) TearDownSuite(t *testing.T) {
 }
 
 func TestUnitTestingSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(UnitTestingSuite))
 }
 
 type endpointTestingSuiteInternal struct {
-	templateDBName string
-	rootDB         *sql.DB
-	server         *httptest.Server
+	postgresContainer *postgres.PostgresContainer
+	templateDBName    string
+	rootDB            *sql.DB
+	server            *httptest.Server
 }
 
 type EndpointTestingSuite struct {
@@ -101,7 +104,20 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	t.Helper()
 
 	ctx := context.Background()
-	rootDB, err := sql.Open("pgx", "host=localhost port=5432 user=postgres password=postgres dbname=postgres")
+
+	postgresContainer, err := postgres.Run(ctx, "postgres:15.1-alpine",
+		postgres.WithUsername("postgres"),
+		postgres.WithPassword("postgres"),
+		postgres.WithDatabase("test_db"),
+		postgres.WithSQLDriver("pgx"),
+		postgres.BasicWaitStrategies(),
+	)
+	require.NoError(t, err, "failed to create postgres test container")
+
+	postgresConnURL, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
+	require.NoError(t, err, "failed to create postgres connection URL")
+
+	rootDB, err := sql.Open("pgx", postgresConnURL)
 	require.NoError(t, err, "failed to open DB connection")
 
 	rootDB.SetMaxOpenConns(1)
@@ -114,23 +130,7 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	_, err = rootDB.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s", templateDBName))
 	require.NoError(t, err, "failed to create template database")
 
-	workdir, err := atlasexec.NewWorkingDir(
-		atlasexec.WithMigrations(
-			os.DirFS("../../../db/migrations/"),
-		),
-	)
-	require.NoError(t, err, "failed to create atlas workdir")
-	defer workdir.Close()
-
-	atlasClient, err := atlasexec.NewClient(workdir.Path(), "atlas")
-	require.NoError(t, err, "failed to create atlas client")
-
-	res, err := atlasClient.MigrateApply(ctx, &atlasexec.MigrateApplyParams{
-		URL: fmt.Sprintf("postgres://postgres:postgres@localhost:5432/%s?sslmode=disable", templateDBName),
-	})
-	require.NoError(t, err, "failed to apply migrations")
-	t.Logf("Applied %d migrations\n", len(res.Applied))
-
+	test.ApplyMigrations(ctx, t, strings.ReplaceAll(postgresConnURL, "test_db", templateDBName))
 	s.Service = &Service{db: nil}
 
 	validationInterceptor, err := validate.NewInterceptor()
@@ -156,9 +156,10 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	s.Client = authv1connect.NewAuthServiceClient(server.Client(), server.URL)
 
 	s._internal = &endpointTestingSuiteInternal{
-		templateDBName: templateDBName,
-		rootDB:         rootDB,
-		server:         server,
+		postgresContainer: postgresContainer,
+		templateDBName:    templateDBName,
+		rootDB:            rootDB,
+		server:            server,
 	}
 }
 
@@ -181,14 +182,17 @@ func (s *EndpointTestingSuite) SetupTest(t *testing.T) {
 	_, err = s._internal.rootDB.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s TEMPLATE %s", testDBName, s._internal.templateDBName))
 	require.NoError(t, err, "failed to create test database from template")
 
-	conn, err := sql.Open("pgx", "host=localhost port=5432 user=postgres password=postgres dbname="+testDBName)
+	postgresConnURL, err := s._internal.postgresContainer.ConnectionString(ctx, "sslmode=disable")
+	require.NoError(t, err, "failed to create postgres connection URL")
+
+	conn, err := sql.Open("pgx", strings.ReplaceAll(postgresConnURL, "test_db", testDBName))
 	require.NoError(t, err, "failed to open test database")
 
 	conn.SetMaxOpenConns(1)
 	conn.SetMaxIdleConns(1)
 	s.DB = conn
 
-	db, err := db.NewFromDBConn(conn)
+	db, err := database.NewFromDBConn(conn)
 	require.NoError(t, err, "failed to create db.DB")
 
 	s.Service.db = db
@@ -197,9 +201,17 @@ func (s *EndpointTestingSuite) SetupTest(t *testing.T) {
 func (s *EndpointTestingSuite) TearDownTest(t *testing.T) {
 	t.Helper()
 
-	_ = s.DB.Close()
+	err := s.DB.Close()
+	if err != nil {
+		t.Logf("failed to close server: %v\n", err)
+	}
+	err = testcontainers.TerminateContainer(s._internal.postgresContainer)
+	if err != nil {
+		t.Logf("failed to terminate container: %v\n", err)
+	}
 }
 
 func TestEndpointTestingSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(EndpointTestingSuite))
 }

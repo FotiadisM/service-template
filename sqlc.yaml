@@ -1,8 +1,8 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema: "./internal/db/schema/"
-    queries: "./internal/db/queries/auth/v1/"
+    schema: "./internal/database/schema/"
+    queries: "./internal/database/queries/auth/v1/"
     gen:
       go:
         package: "queries"

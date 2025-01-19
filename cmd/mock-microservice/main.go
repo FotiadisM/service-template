@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/db"
+	"github.com/FotiadisM/mock-microservice/internal/database"
 	"github.com/FotiadisM/mock-microservice/internal/server"
 	authv1 "github.com/FotiadisM/mock-microservice/internal/services/auth/v1"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
@@ -24,7 +24,7 @@ func main() {
 	log := ilog.NewLogger()
 	slog.SetDefault(log)
 
-	db, err := db.New(config.DB)
+	db, err := database.New(config.DB)
 	if err != nil {
 		log.Error("failed to create db", ilog.Err(err.Error()))
 		os.Exit(1)

@@ -1,10 +1,10 @@
 env "local" {
-  src = "file://internal/db/schema"
+  src = "file://internal/database/schema"
   url = getenv("ATLAS_PSQL_URI")
   dev = getenv("ATLAS_PSQL_DEV_URI")
 
   migration {
-    dir    = "file://internal/db/migrations"
+    dir    = "file://internal/database/migrations"
     format = atlas
   }
 
