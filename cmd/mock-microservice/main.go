@@ -53,12 +53,7 @@ func main() {
 	}
 	svc := authv1.NewService(db)
 
-	interceptors, err := server.CreateInterceptors(log)
-	if err != nil {
-		log.Error("failed to create interceptors", ilog.Err(err))
-		os.Exit(1)
-	}
-
+	interceptors := server.ChainMiddleware(config, log)
 	authsvcPath, authsvcHanlder := authv1connect.NewAuthServiceHandler(svc,
 		connect.WithInterceptors(interceptors...),
 	)

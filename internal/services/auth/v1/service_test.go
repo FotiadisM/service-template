@@ -41,11 +41,11 @@ func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 	s.DB = mocks.NewMockQuerier(t)
 	s.Service = &Service{db: s.DB}
 
+	config := test.NewConfig()
 	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(s.Service,
-		connect.WithInterceptors(test.NewMiddleware(t)...),
+		connect.WithInterceptors(test.ChainMiddleware(t, config)...),
 	)
 
-	config := test.NewConfig()
 	server := test.NewServer(t, config, map[string]http.Handler{svcPath: svcHandler})
 
 	s.ServerURL = server.URL
@@ -119,11 +119,11 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	test.ApplyMigrations(ctx, t, strings.ReplaceAll(postgresConnURL, "test_db", templateDBName))
 	s.Service = &Service{db: nil}
 
+	config := test.NewConfig()
 	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(s.Service,
-		connect.WithInterceptors(test.NewMiddleware(t)...),
+		connect.WithInterceptors(test.ChainMiddleware(t, config)...),
 	)
 
-	config := test.NewConfig()
 	server := test.NewServer(t, config, map[string]http.Handler{svcPath: svcHandler})
 
 	s.ServerURL = server.URL
