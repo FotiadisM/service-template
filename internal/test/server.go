@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"connectrpc.com/vanguard"
-	"github.com/FotiadisM/mock-microservice/internal/config"
 	"github.com/stretchr/testify/require"
+
+	"github.com/FotiadisM/mock-microservice/internal/config"
 )
 
 type Server struct {
