@@ -16,7 +16,7 @@ func ApplyMigrations(ctx context.Context, t *testing.T, databaseURL string) {
 
 	workdir, err := atlasexec.NewWorkingDir(
 		atlasexec.WithMigrations(
-			os.DirFS("../../../db/migrations/"),
+			os.DirFS("../../../database/migrations/"),
 		),
 	)
 	require.NoError(t, err, "failed to create atlas workdir")

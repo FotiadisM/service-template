@@ -2,6 +2,7 @@ package logging
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"slices"
 	"strings"
@@ -61,7 +62,7 @@ func UnaryServerInterceptor(logger *slog.Logger, opts ...Option) grpc.UnaryServe
 		logAttrs := []slog.Attr{slog.Int64("rpc.server.duration", duration.Milliseconds())}
 		st := status.Convert(err)
 		if err != nil {
-			logAttrs = append(logAttrs, ilog.Err(st.Message()))
+			logAttrs = append(logAttrs, ilog.Err(errors.New(st.Message()))) //nolint:err113
 		}
 
 		detailsAttrs := options.grpcDetailsToLogAttrsFunc(st.Details())
@@ -145,7 +146,7 @@ func StreamServerInterceptor(logger *slog.Logger, opts ...Option) grpc.StreamSer
 		logAttrs := []slog.Attr{}
 		st := status.Convert(err)
 		if err != nil {
-			logAttrs = append(logAttrs, ilog.Err(st.Message()))
+			logAttrs = append(logAttrs, ilog.Err(errors.New(st.Message()))) //nolint:err113
 		}
 
 		detailsAttrs := options.grpcDetailsToLogAttrsFunc(st.Details())

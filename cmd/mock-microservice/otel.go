@@ -22,7 +22,7 @@ type otelShutDownFunc func(ctx context.Context) error
 
 func initializeOTEL(ctx context.Context, log *slog.Logger, exporterAddr string) (otelShutDownFunc, error) {
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
-		log.Error("open-telemtry", ilog.Err(err.Error()))
+		log.Error("open-telemtry", ilog.Err(err))
 	}))
 
 	conn, err := grpc.NewClient(exporterAddr,

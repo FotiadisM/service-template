@@ -5,13 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
-	"connectrpc.com/validate"
-	"connectrpc.com/vanguard"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -24,7 +21,7 @@ import (
 )
 
 type unitTestingSuiteInternal struct {
-	server *httptest.Server
+	server *test.Server
 }
 
 type UnitTestingSuite struct {
@@ -44,27 +41,16 @@ func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 	s.DB = mocks.NewMockQuerier(t)
 	s.Service = &Service{db: s.DB}
 
-	validationInterceptor, err := validate.NewInterceptor()
-	require.NoError(t, err, "failed to create validation interceptor")
-
 	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(s.Service,
-		connect.WithInterceptors(validationInterceptor),
+		connect.WithInterceptors(test.NewMiddleware(t)...),
 	)
 
-	vanguardSvc := vanguard.NewService(svcPath, svcHandler)
-	transcoder, err := vanguard.NewTranscoder([]*vanguard.Service{vanguardSvc})
-	require.NoError(t, err, "failed to create vanguard transcoder")
-
-	mux := http.NewServeMux()
-	mux.Handle("/", transcoder)
-
-	server := httptest.NewUnstartedServer(mux)
-	server.EnableHTTP2 = true
-	server.StartTLS()
+	config := test.NewConfig()
+	server := test.NewServer(t, config, map[string]http.Handler{svcPath: svcHandler})
 
 	s.ServerURL = server.URL
-	s.HTTPClint = server.Client()
-	s.Client = authv1connect.NewAuthServiceClient(server.Client(), server.URL)
+	s.HTTPClint = server.Client
+	s.Client = authv1connect.NewAuthServiceClient(server.Client, server.URL)
 
 	s._internal = &unitTestingSuiteInternal{
 		server: server,
@@ -74,7 +60,7 @@ func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 func (s *UnitTestingSuite) TearDownSuite(t *testing.T) {
 	t.Helper()
 
-	s._internal.server.Close()
+	s._internal.server.CleanUp()
 }
 
 func TestUnitTestingSuite(t *testing.T) {
@@ -86,7 +72,7 @@ type endpointTestingSuiteInternal struct {
 	postgresContainer *postgres.PostgresContainer
 	templateDBName    string
 	rootDB            *sql.DB
-	server            *httptest.Server
+	server            *test.Server
 }
 
 type EndpointTestingSuite struct {
@@ -133,27 +119,16 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	test.ApplyMigrations(ctx, t, strings.ReplaceAll(postgresConnURL, "test_db", templateDBName))
 	s.Service = &Service{db: nil}
 
-	validationInterceptor, err := validate.NewInterceptor()
-	require.NoError(t, err, "failed to create validation interceptor")
-
 	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(s.Service,
-		connect.WithInterceptors(validationInterceptor),
+		connect.WithInterceptors(test.NewMiddleware(t)...),
 	)
 
-	vanguardSvc := vanguard.NewService(svcPath, svcHandler)
-	transcoder, err := vanguard.NewTranscoder([]*vanguard.Service{vanguardSvc})
-	require.NoError(t, err, "failed to create vanguard transcoder")
-
-	mux := http.NewServeMux()
-	mux.Handle("/", transcoder)
-
-	server := httptest.NewUnstartedServer(mux)
-	server.EnableHTTP2 = true
-	server.StartTLS()
+	config := test.NewConfig()
+	server := test.NewServer(t, config, map[string]http.Handler{svcPath: svcHandler})
 
 	s.ServerURL = server.URL
-	s.HTTPClint = server.Client()
-	s.Client = authv1connect.NewAuthServiceClient(server.Client(), server.URL)
+	s.HTTPClint = server.Client
+	s.Client = authv1connect.NewAuthServiceClient(server.Client, server.URL)
 
 	s._internal = &endpointTestingSuiteInternal{
 		postgresContainer: postgresContainer,
@@ -166,7 +141,7 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 func (s *EndpointTestingSuite) TearDownSuite(t *testing.T) {
 	t.Helper()
 
-	s._internal.server.Close()
+	s._internal.server.CleanUp()
 }
 
 func (s *EndpointTestingSuite) SetupTest(t *testing.T) {

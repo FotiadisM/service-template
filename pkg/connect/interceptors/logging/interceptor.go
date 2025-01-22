@@ -123,11 +123,11 @@ func (i *Interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		if err != nil {
 			if connectErr := new(connect.Error); errors.As(err, &connectErr) {
 				level = i.opts.codeToLevelFunc(connectErr.Code())
-				logAttrs = append(logAttrs, ilog.Err(connectErr.Message()))
+				logAttrs = append(logAttrs, ilog.Err(errors.New(connectErr.Message()))) //nolint:err113
 				logAttrs = append(logAttrs, i.opts.errorDetailsAttrFunc(connectErr.Details())...)
 			} else {
 				level = slog.LevelError
-				logAttrs = append(logAttrs, ilog.Err(err.Error()))
+				logAttrs = append(logAttrs, ilog.Err(err))
 			}
 		}
 
@@ -179,11 +179,11 @@ func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) co
 		if err != nil {
 			if connectErr := new(connect.Error); errors.As(err, &connectErr) {
 				level = i.opts.codeToLevelFunc(connectErr.Code())
-				logAttrs = append(logAttrs, ilog.Err(connectErr.Message()))
+				logAttrs = append(logAttrs, ilog.Err(errors.New(connectErr.Message()))) //nolint:err113
 				logAttrs = append(logAttrs, i.opts.errorDetailsAttrFunc(connectErr.Details())...)
 			} else {
 				level = slog.LevelError
-				logAttrs = append(logAttrs, ilog.Err(err.Error()))
+				logAttrs = append(logAttrs, ilog.Err(err))
 			}
 		}
 

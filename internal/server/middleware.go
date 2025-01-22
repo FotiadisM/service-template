@@ -11,7 +11,7 @@ import (
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
 )
 
-func createInterceptors(log *slog.Logger) ([]connect.Interceptor, error) {
+func CreateInterceptors(log *slog.Logger) ([]connect.Interceptor, error) {
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create otel interceptor: %w", err)

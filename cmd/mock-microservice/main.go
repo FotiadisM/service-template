@@ -4,8 +4,12 @@ import (
 	"context"
 	"flag"
 	"log/slog"
+	"net/http"
 	"os"
 
+	"connectrpc.com/connect"
+
+	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/config"
 	"github.com/FotiadisM/mock-microservice/internal/database"
 	"github.com/FotiadisM/mock-microservice/internal/server"
@@ -26,7 +30,7 @@ func main() {
 
 	db, err := database.New(config.DB)
 	if err != nil {
-		log.Error("failed to create db", ilog.Err(err.Error()))
+		log.Error("failed to create db", ilog.Err(err))
 		os.Exit(1)
 	}
 
@@ -34,12 +38,12 @@ func main() {
 		var shutdownFunc otelShutDownFunc
 		shutdownFunc, err = initializeOTEL(ctx, log, config.Server.Inst.OtelExporterAddr)
 		if err != nil {
-			log.Error("failed to initialize otel SDK", ilog.Err(err.Error()))
+			log.Error("failed to initialize otel SDK", ilog.Err(err))
 		}
 		defer func() {
 			err = shutdownFunc(ctx)
 			if err != nil {
-				log.Error("failed to shutdown otel", ilog.Err(err.Error()))
+				log.Error("failed to shutdown otel", ilog.Err(err))
 			}
 		}()
 	}
@@ -49,9 +53,23 @@ func main() {
 	}
 	svc := authv1.NewService(db)
 
-	server, err := server.NewServer(config, log, svc, checker)
+	interceptors, err := server.CreateInterceptors(log)
 	if err != nil {
-		log.Error("failed to create server", ilog.Err(err.Error()))
+		log.Error("failed to create interceptors", ilog.Err(err))
+		os.Exit(1)
+	}
+
+	authsvcPath, authsvcHanlder := authv1connect.NewAuthServiceHandler(svc,
+		connect.WithInterceptors(interceptors...),
+	)
+
+	services := map[string]http.Handler{
+		authsvcPath: authsvcHanlder,
+	}
+
+	server, err := server.NewServer(config, log, services, checker)
+	if err != nil {
+		log.Error("failed to create server", ilog.Err(err))
 	}
 
 	server.Start()

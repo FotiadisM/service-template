@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"connectrpc.com/connect"
 	"connectrpc.com/grpchealth"
 	"connectrpc.com/grpcreflect"
 	"connectrpc.com/vanguard"
@@ -29,24 +28,21 @@ type Server struct {
 	server *http.Server
 }
 
-func NewServer(config *config.Config, log *slog.Logger, svc authv1connect.AuthServiceHandler, checker grpchealth.Checker) (*Server, error) {
-	interceptors, err := createInterceptors(log)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create interceptors: %w", err)
-	}
-
+func NewServer(config *config.Config, log *slog.Logger, services map[string]http.Handler, checker grpchealth.Checker) (*Server, error) {
 	mux := http.NewServeMux()
 	mux.Handle(grpchealth.NewHandler(checker))
 
-	svcPath, svcHandler := authv1connect.NewAuthServiceHandler(svc,
-		connect.WithInterceptors(interceptors...),
-	)
-
 	if config.Server.HTTP.DisableRESTTranscoding {
-		mux.Handle(svcPath, svcHandler)
+		for path, handler := range services {
+			mux.Handle(path, handler)
+		}
 	} else {
-		vanguardSvc := vanguard.NewService(svcPath, svcHandler)
-		transcoder, err := vanguard.NewTranscoder([]*vanguard.Service{vanguardSvc})
+		vanrguardServices := []*vanguard.Service{}
+		for path, handler := range services {
+			vanrguardServices = append(vanrguardServices, vanguard.NewService(path, handler))
+		}
+
+		transcoder, err := vanguard.NewTranscoder(vanrguardServices)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create vanguard transcoder: %w", err)
 		}
@@ -85,7 +81,7 @@ func (s *Server) Start() {
 	go func() {
 		err := s.server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			s.log.Error("http server exited", ilog.Err(err.Error()))
+			s.log.Error("http server exited", ilog.Err(err))
 			os.Exit(1)
 		}
 	}()
@@ -101,6 +97,6 @@ func (s *Server) AwaitShutdown(ctx context.Context) {
 	defer cancel()
 	err := s.server.Shutdown(timer)
 	if err != nil {
-		s.log.Error("failed to shutdown http server", ilog.Err(err.Error()))
+		s.log.Error("failed to shutdown http server", ilog.Err(err))
 	}
 }

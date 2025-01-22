@@ -6,8 +6,8 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-func Err(err string) slog.Attr {
-	return slog.String("error", err)
+func Err(err error) slog.Attr {
+	return slog.String("error", err.Error())
 }
 
 func NewLogger(opts ...Option) *slog.Logger {

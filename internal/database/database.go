@@ -68,7 +68,7 @@ func WithConfiguredTx(ctx context.Context, db *DB, options *sql.TxOptions, fn Tx
 
 	tx, err := db.DB.BeginTx(ctx, options)
 	if err != nil {
-		log.Error("failed to begin transaction", ilog.Err(err.Error()))
+		log.Error("failed to begin transaction", ilog.Err(err))
 		return err
 	}
 
@@ -76,7 +76,7 @@ func WithConfiguredTx(ctx context.Context, db *DB, options *sql.TxOptions, fn Tx
 		if p := recover(); p != nil {
 			log.Error("recovered from panic, rolling back transaction and panicking again")
 			if err = tx.Rollback(); err != nil {
-				log.Error("failed to roll back transaction", ilog.Err(err.Error()))
+				log.Error("failed to roll back transaction", ilog.Err(err))
 			}
 			panic(p)
 		}
@@ -88,7 +88,7 @@ func WithConfiguredTx(ctx context.Context, db *DB, options *sql.TxOptions, fn Tx
 	})
 	if err != nil {
 		if txErr := tx.Rollback(); txErr != nil {
-			log.Error("failed to roll back transaction", ilog.Err(err.Error()))
+			log.Error("failed to roll back transaction", ilog.Err(err))
 		}
 		return err
 	}
