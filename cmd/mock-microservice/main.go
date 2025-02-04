@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"connectrpc.com/connect"
+	"github.com/rs/cors"
 
 	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/config"
@@ -58,10 +59,20 @@ func main() {
 		connect.WithInterceptors(interceptors...),
 	)
 
+	cors := cors.New(cors.Options{
+		AllowedOrigins:      config.Cors.AllowedOrigins,
+		AllowedMethods:      config.Cors.AllowedMethods,
+		AllowedHeaders:      config.Cors.AllowedHeaders,
+		ExposedHeaders:      config.Cors.ExposedHeaders,
+		MaxAge:              config.Cors.MaxAge,
+		AllowCredentials:    config.Cors.AllowCredentials,
+		AllowPrivateNetwork: config.Cors.AllowPrivateNetwork,
+	})
+	authsvcHanlder = cors.Handler(authsvcHanlder)
+
 	services := map[string]http.Handler{
 		authsvcPath: authsvcHanlder,
 	}
-
 	server, err := server.NewServer(config, log, services, checker)
 	if err != nil {
 		log.Error("failed to create server", ilog.Err(err))

@@ -76,10 +76,21 @@ type Server struct {
 	HTTP HTTP `env:", prefix=HTTPP_SERVER_"`
 }
 
+type Cors struct {
+	AllowedOrigins      []string `env:"ALLOWED_ORIGINS, default=*"`
+	AllowedMethods      []string `env:"ALLOWED_METHODS, default=HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS"`
+	AllowedHeaders      []string `env:"ALLOWED_HEADERS, default=*"`
+	ExposedHeaders      []string `env:"EXPOSED_HEADERS, default=*"`
+	MaxAge              int      `env:"MAX_AGE, default=7200"`
+	AllowCredentials    bool     `env:"ALLOW_CREDENTIALS, default=false"`
+	AllowPrivateNetwork bool     `env:"ALLOW_PRIVATE_NETWORK, default=false"`
+}
+
 type Config struct {
 	Server  Server
 	DB      DB      `env:", prefix=PSQL_"`
 	Logging Logging `env:", prefix=LOGGING_"`
+	Cors    Cors    `env:", prefix=CORS_"`
 }
 
 func NewConfig(ctx context.Context) *Config {
