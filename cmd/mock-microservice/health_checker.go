@@ -12,13 +12,13 @@ import (
 
 var errUnknownService = errors.New("unknown service")
 
-type checker struct {
+type healthChecker struct {
 	DB *sql.DB
 }
 
-var _ grpchealth.Checker = &checker{}
+var _ grpchealth.Checker = &healthChecker{}
 
-func (c *checker) Check(ctx context.Context, req *grpchealth.CheckRequest) (*grpchealth.CheckResponse, error) {
+func (c *healthChecker) Check(ctx context.Context, req *grpchealth.CheckRequest) (*grpchealth.CheckResponse, error) {
 	if req.Service == "startup" {
 		return &grpchealth.CheckResponse{Status: grpchealth.StatusServing}, nil
 	}
@@ -39,7 +39,7 @@ func (c *checker) Check(ctx context.Context, req *grpchealth.CheckRequest) (*grp
 	return nil, err
 }
 
-func (c *checker) livenessProbe(ctx context.Context) (*grpchealth.CheckResponse, error) {
+func (c *healthChecker) livenessProbe(ctx context.Context) (*grpchealth.CheckResponse, error) {
 	err := c.DB.PingContext(ctx)
 	if err != nil {
 		return &grpchealth.CheckResponse{Status: grpchealth.StatusNotServing}, nil //nolint

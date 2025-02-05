@@ -44,6 +44,8 @@ const (
 	// AuthServiceRefreshTokenProcedure is the fully-qualified name of the AuthService's RefreshToken
 	// RPC.
 	AuthServiceRefreshTokenProcedure = "/auth.v1.AuthService/RefreshToken"
+	// AuthServiceThrowPanicProcedure is the fully-qualified name of the AuthService's ThrowPanic RPC.
+	AuthServiceThrowPanicProcedure = "/auth.v1.AuthService/ThrowPanic"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -53,6 +55,7 @@ var (
 	authServiceLoginMethodDescriptor        = authServiceServiceDescriptor.Methods().ByName("Login")
 	authServiceLogoutMethodDescriptor       = authServiceServiceDescriptor.Methods().ByName("Logout")
 	authServiceRefreshTokenMethodDescriptor = authServiceServiceDescriptor.Methods().ByName("RefreshToken")
+	authServiceThrowPanicMethodDescriptor   = authServiceServiceDescriptor.Methods().ByName("ThrowPanic")
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -61,6 +64,7 @@ type AuthServiceClient interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
+	ThrowPanic(context.Context, *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -97,6 +101,12 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceRefreshTokenMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		throwPanic: connect.NewClient[v1.ThrowPanicRequest, v1.ThrowPanicResponse](
+			httpClient,
+			baseURL+AuthServiceThrowPanicProcedure,
+			connect.WithSchema(authServiceThrowPanicMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -106,6 +116,7 @@ type authServiceClient struct {
 	login        *connect.Client[v1.LoginRequest, v1.LoginResponse]
 	logout       *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
 	refreshToken *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
+	throwPanic   *connect.Client[v1.ThrowPanicRequest, v1.ThrowPanicResponse]
 }
 
 // Register calls auth.v1.AuthService.Register.
@@ -128,12 +139,18 @@ func (c *authServiceClient) RefreshToken(ctx context.Context, req *connect.Reque
 	return c.refreshToken.CallUnary(ctx, req)
 }
 
+// ThrowPanic calls auth.v1.AuthService.ThrowPanic.
+func (c *authServiceClient) ThrowPanic(ctx context.Context, req *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error) {
+	return c.throwPanic.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	Register(context.Context, *connect.Request[v1.RegisterRequest]) (*connect.Response[v1.RegisterResponse], error)
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
+	ThrowPanic(context.Context, *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -166,6 +183,12 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceRefreshTokenMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceThrowPanicHandler := connect.NewUnaryHandler(
+		AuthServiceThrowPanicProcedure,
+		svc.ThrowPanic,
+		connect.WithSchema(authServiceThrowPanicMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceRegisterProcedure:
@@ -176,6 +199,8 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceLogoutHandler.ServeHTTP(w, r)
 		case AuthServiceRefreshTokenProcedure:
 			authServiceRefreshTokenHandler.ServeHTTP(w, r)
+		case AuthServiceThrowPanicProcedure:
+			authServiceThrowPanicHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -199,4 +224,8 @@ func (UnimplementedAuthServiceHandler) Logout(context.Context, *connect.Request[
 
 func (UnimplementedAuthServiceHandler) RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.RefreshToken is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) ThrowPanic(context.Context, *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.ThrowPanic is not implemented"))
 }

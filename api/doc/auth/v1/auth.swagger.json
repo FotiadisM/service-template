@@ -221,6 +221,9 @@
         }
       }
     },
+    "v1ThrowPanicResponse": {
+      "type": "object"
+    },
     "v1UserType": {
       "type": "string",
       "enum": [

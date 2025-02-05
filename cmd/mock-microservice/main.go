@@ -49,7 +49,7 @@ func main() {
 		}()
 	}
 
-	checker := &checker{
+	checker := &healthChecker{
 		DB: db.DB,
 	}
 	svc := authv1.NewService(db)

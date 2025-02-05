@@ -9,7 +9,9 @@ import (
 	"connectrpc.com/validate"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
+	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/errsanitizer"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
+	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/recovery"
 )
 
 func OtelMiddleware() (connect.Interceptor, error) {
@@ -32,6 +34,16 @@ func ValidationMiddleware() (connect.Interceptor, error) {
 	return m, nil
 }
 
+func RecoveryMiddleware() connect.Interceptor {
+	return recovery.NewInterceptor()
+}
+
+func ErrSanitizerMiddleware() connect.Interceptor {
+	return errsanitizer.NewInterceptor(errsanitizer.WithRecoveryFunc(func(_ error) error {
+		return connect.NewError(connect.CodeInternal, nil)
+	}))
+}
+
 func ChainMiddleware(_ *config.Config, log *slog.Logger) []connect.Interceptor {
 	otelInterceptor, err := OtelMiddleware()
 	if err != nil {
@@ -44,8 +56,10 @@ func ChainMiddleware(_ *config.Config, log *slog.Logger) []connect.Interceptor {
 	}
 
 	interceptors := []connect.Interceptor{
+		ErrSanitizerMiddleware(),
 		otelInterceptor,
 		LoggingMiddleware(log),
+		RecoveryMiddleware(),
 		validationInterceptor,
 	}
 

@@ -27,6 +27,10 @@ type DB struct {
 	ConnMaxLifetime time.Duration     `env:"CONN_LIFETIME"`
 }
 
+type Redis struct {
+	URI string `env:"URI, required"`
+}
+
 type GRPC struct {
 	Addr       string `env:"ADDR, default=:8080"`
 	Reflection bool   `env:"REFLECTION"`
@@ -91,6 +95,7 @@ type Config struct {
 	DB      DB      `env:", prefix=PSQL_"`
 	Logging Logging `env:", prefix=LOGGING_"`
 	Cors    Cors    `env:", prefix=CORS_"`
+	Redis   Redis   `env:", prefix=REDIS_"`
 }
 
 func NewConfig(ctx context.Context) *Config {

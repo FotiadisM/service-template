@@ -47,6 +47,9 @@ message RefreshTokenResponse {
   string refresh_token = 2;
 }
 
+message ThrowPanicRequest {}
+message ThrowPanicResponse {}
+
 service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
@@ -69,4 +72,5 @@ service AuthService {
       body: "*"
     };
   }
+  rpc ThrowPanic(ThrowPanicRequest) returns (ThrowPanicResponse) {}
 }
