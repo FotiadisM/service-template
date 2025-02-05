@@ -1,12 +1,15 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
 	"connectrpc.com/validate"
+
+	"github.com/bufbuild/protovalidate-go"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/errsanitizer"
@@ -39,7 +42,11 @@ func RecoveryMiddleware() connect.Interceptor {
 }
 
 func ErrSanitizerMiddleware() connect.Interceptor {
-	return errsanitizer.NewInterceptor(errsanitizer.WithRecoveryFunc(func(_ error) error {
+	return errsanitizer.NewInterceptor(errsanitizer.WithRecoveryFunc(func(err error) error {
+		if vErr := new(protovalidate.ValidationError); errors.As(err, &vErr) {
+			return connect.NewError(connect.CodeInvalidArgument, err)
+		}
+
 		return connect.NewError(connect.CodeInternal, nil)
 	}))
 }

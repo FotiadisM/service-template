@@ -12,6 +12,7 @@ require (
 	connectrpc.com/validate v0.1.0
 	connectrpc.com/vanguard v0.3.0
 	github.com/XSAM/otelsql v0.36.0
+	github.com/bufbuild/protovalidate-go v0.8.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/lmittmann/tint v1.0.6
@@ -45,7 +46,6 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
-	github.com/bufbuild/protovalidate-go v0.8.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
