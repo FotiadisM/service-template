@@ -17,6 +17,8 @@ import (
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/recovery"
 )
 
+var errUnexpected = errors.New("unexpected error")
+
 func OtelMiddleware() (connect.Interceptor, error) {
 	m, err := otelconnect.NewInterceptor()
 	if err != nil {
@@ -42,13 +44,19 @@ func RecoveryMiddleware() connect.Interceptor {
 }
 
 func ErrSanitizerMiddleware() connect.Interceptor {
-	return errsanitizer.NewInterceptor(errsanitizer.WithRecoveryFunc(func(err error) error {
+	errSanitizerFunc := func(err error) error {
 		if vErr := new(protovalidate.ValidationError); errors.As(err, &vErr) {
 			return connect.NewError(connect.CodeInvalidArgument, err)
 		}
 
-		return connect.NewError(connect.CodeInternal, nil)
-	}))
+		if cErr := new(connect.Error); errors.As(err, &cErr) {
+			return err
+		}
+
+		return connect.NewError(connect.CodeInternal, errUnexpected)
+	}
+
+	return errsanitizer.NewInterceptor(errsanitizer.WithRecoveryFunc(errSanitizerFunc))
 }
 
 func ChainMiddleware(_ *config.Config, log *slog.Logger) []connect.Interceptor {
