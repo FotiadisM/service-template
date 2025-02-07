@@ -23,8 +23,11 @@ func NewInterceptor(opts ...Option) *Interceptor {
 func (i *Interceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (res connect.AnyResponse, err error) {
 		res, err = next(ctx, req)
+		if err != nil {
+			return res, i.snFunc(err)
+		}
 
-		return res, i.snFunc(err)
+		return res, nil
 	}
 }
 
@@ -35,7 +38,10 @@ func (i *Interceptor) WrapStreamingClient(next connect.StreamingClientFunc) conn
 func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return func(ctx context.Context, conn connect.StreamingHandlerConn) (err error) {
 		err = next(ctx, conn)
+		if err != nil {
+			return i.snFunc(err)
+		}
 
-		return i.snFunc(err)
+		return nil
 	}
 }
