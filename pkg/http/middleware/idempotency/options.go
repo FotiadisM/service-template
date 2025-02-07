@@ -1,6 +1,7 @@
 package idempotency
 
 import (
+	"log/slog"
 	"time"
 )
 
@@ -21,5 +22,11 @@ func WithHeaderReplayKeyName(key string) Option {
 func WithDataExp(exp time.Duration) Option {
 	return func(m *Middleware) {
 		m.dataExp = exp
+	}
+}
+
+func WithLogger(log *slog.Logger) Option {
+	return func(m *Middleware) {
+		m.log = log
 	}
 }

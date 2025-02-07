@@ -3,6 +3,7 @@ package idempotency
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"maps"
 	"net/http"
 	"time"
@@ -19,29 +20,27 @@ type Data struct {
 }
 
 type Store interface {
-	SetKey(ctx context.Context, key string) (bool, error)
-	DelKey(ctx context.Context, key string) error
-	GetData(ctx context.Context, key string) (*Data, error)
-	SetData(ctx context.Context, key string, data *Data, exp time.Duration) error
+	SetKey(ctx context.Context, key string) bool
+	DelKey(ctx context.Context, key string)
+	GetData(ctx context.Context, key string) *Data
+	SetData(ctx context.Context, key string, data *Data, exp time.Duration)
 }
-
-type ErrHandler func(w http.ResponseWriter, r *http.Request, err error) bool
 
 type Middleware struct {
 	store         Store
 	keyName       string
 	replayKeyName string
 	dataExp       time.Duration
-	errHandler    ErrHandler
+	log           *slog.Logger
 }
 
-func NewMiddleware(store Store, errHandler ErrHandler, opts ...Option) *Middleware {
+func NewMiddleware(store Store, opts ...Option) *Middleware {
 	m := &Middleware{
 		store:         store,
 		keyName:       "Idempotency-Key",
 		replayKeyName: "Idempotent-Replayed",
 		dataExp:       3 * time.Minute,
-		errHandler:    errHandler,
+		log:           slog.Default(),
 	}
 	for _, o := range opts {
 		o(m)
@@ -59,30 +58,20 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 		}
 
 		ctx := r.Context()
-		data, err := m.store.GetData(ctx, key)
-		if err == nil {
+		data := m.store.GetData(ctx, key)
+		if data != nil {
 			maps.Copy(w.Header(), data.Header)
 			w.Header().Set(m.replayKeyName, "true")
 			w.WriteHeader(data.StatusCode)
-			if _, err = w.Write(data.Body); err != nil {
-				if m.errHandler(w, r, err) {
-					return
-				}
+			_, err := w.Write(data.Body)
+			if err != nil {
+				m.log.Error("http-idempotency: failed to write response to ResponseWriter", "error", err)
 			}
+
 			return
 		}
-		if !errors.Is(err, ErrNoDataFound) {
-			if m.errHandler(w, r, err) {
-				return
-			}
-		}
 
-		inProgress, err := m.store.SetKey(ctx, key)
-		if err != nil {
-			if m.errHandler(w, r, err) {
-				return
-			}
-		}
+		inProgress := m.store.SetKey(ctx, key)
 		if inProgress {
 			w.WriteHeader(http.StatusConflict)
 		}
@@ -98,18 +87,8 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
 		if data.StatusCode == 0 {
 			data.StatusCode = http.StatusOK
 		}
-		err = m.store.SetData(ctx, key, data, m.dataExp)
-		if err != nil {
-			if m.errHandler(w, r, err) {
-				return
-			}
-		}
 
-		err = m.store.DelKey(ctx, key)
-		if err != nil {
-			if m.errHandler(w, r, err) {
-				return
-			}
-		}
+		m.store.SetData(ctx, key, data, m.dataExp)
+		m.store.DelKey(ctx, key)
 	})
 }
