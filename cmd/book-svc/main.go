@@ -1,0 +1,83 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"log/slog"
+	"net/http"
+	"os"
+
+	"connectrpc.com/connect"
+	"github.com/rs/cors"
+
+	"github.com/FotiadisM/mock-microservice/api/gen/go/book/v1/bookv1connect"
+	"github.com/FotiadisM/mock-microservice/internal/config"
+	"github.com/FotiadisM/mock-microservice/internal/database"
+	"github.com/FotiadisM/mock-microservice/internal/server"
+	bookv1 "github.com/FotiadisM/mock-microservice/internal/services/book/v1"
+	"github.com/FotiadisM/mock-microservice/pkg/ilog"
+	"github.com/FotiadisM/mock-microservice/pkg/version"
+)
+
+func main() {
+	version.AddFlag(nil)
+	flag.Parse()
+
+	ctx := context.Background()
+	config := config.NewConfig(ctx)
+
+	log := ilog.NewLogger()
+	slog.SetDefault(log)
+
+	db, err := database.New(config.DB)
+	if err != nil {
+		log.Error("failed to create db", ilog.Err(err))
+		os.Exit(1)
+	}
+
+	if !config.Server.Inst.OtelSDKDisabled {
+		var shutdownFunc otelShutDownFunc
+		shutdownFunc, err = initializeOTEL(ctx, log, config.Server.Inst.OtelExporterAddr)
+		if err != nil {
+			log.Error("failed to initialize otel SDK", ilog.Err(err))
+		}
+		defer func() {
+			err = shutdownFunc(ctx)
+			if err != nil {
+				log.Error("failed to shutdown otel", ilog.Err(err))
+			}
+		}()
+	}
+
+	checker := &healthChecker{
+		DB: db.DB,
+	}
+	svc := bookv1.NewService(db)
+
+	interceptors := server.ChainMiddleware(config, log)
+	booksvcPath, booksvcHanlder := bookv1connect.NewBookServiceHandler(svc,
+		connect.WithInterceptors(interceptors...),
+	)
+
+	cors := cors.New(cors.Options{
+		AllowedOrigins:      config.Cors.AllowedOrigins,
+		AllowedMethods:      config.Cors.AllowedMethods,
+		AllowedHeaders:      config.Cors.AllowedHeaders,
+		ExposedHeaders:      config.Cors.ExposedHeaders,
+		MaxAge:              config.Cors.MaxAge,
+		AllowCredentials:    config.Cors.AllowCredentials,
+		AllowPrivateNetwork: config.Cors.AllowPrivateNetwork,
+	})
+	booksvcHanlder = cors.Handler(booksvcHanlder)
+
+	services := map[string]http.Handler{
+		booksvcPath: booksvcHanlder,
+	}
+	server, err := server.NewServer(config, log, services, checker)
+	if err != nil {
+		log.Error("failed to create server", ilog.Err(err))
+	}
+
+	server.Start()
+	server.AwaitShutdown(ctx)
+}

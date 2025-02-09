@@ -10,7 +10,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/services/auth/v1/queries"
+	"github.com/FotiadisM/mock-microservice/internal/services/book/v1/queries"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
 

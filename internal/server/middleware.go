@@ -12,6 +12,7 @@ import (
 	"github.com/bufbuild/protovalidate-go"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
+	svcErrors "github.com/FotiadisM/mock-microservice/internal/services/errors"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/errsanitizer"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/recovery"
@@ -45,12 +46,20 @@ func RecoveryMiddleware() connect.Interceptor {
 
 func ErrSanitizerMiddleware() connect.Interceptor {
 	errSanitizerFunc := func(err error) error {
-		if vErr := new(protovalidate.ValidationError); errors.As(err, &vErr) {
+		if tErr := new(protovalidate.ValidationError); errors.As(err, &tErr) {
 			return connect.NewError(connect.CodeInvalidArgument, err)
 		}
 
-		if cErr := new(connect.Error); errors.As(err, &cErr) {
+		if tErr := new(connect.Error); errors.As(err, &tErr) {
 			return err
+		}
+
+		if tErr := new(svcErrors.ServiceError); errors.As(err, &tErr) {
+			cErr := connect.NewError(tErr.ConnectRPCCode, tErr)
+			details, _ := connect.NewErrorDetail(tErr.Err)
+			cErr.AddDetail(details)
+
+			return cErr
 		}
 
 		return connect.NewError(connect.CodeInternal, errUnexpected)

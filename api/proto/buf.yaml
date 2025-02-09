@@ -1,6 +1,6 @@
 version: v2
 modules:
-  - name: buf.build/FotiadisM/mock-microservice
+  - name: buf.build/FotiadisM/book-svc
 deps:
   - buf.build/googleapis/googleapis
   - buf.build/bufbuild/protovalidate

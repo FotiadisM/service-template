@@ -74,6 +74,7 @@ tasks:
 
   sql:gen:
     desc: Generate DB schema structs and queries
+    aliases: [sql-gen]
     cmds:
       - sqlc generate
       - task: mocks:gen

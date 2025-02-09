@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package book.v1;
+
+import "buf/validate/validate.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+message Error {
+  string code = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ErrorResponse {
+  Error error = 1;
+}
+
+message Book {
+  string id = 1;
+  string title = 2;
+  string author_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message Author {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+// Book rpcs
+
+message GetBookRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message GetBookResponse {
+  Book book = 1;
+}
+
+message ListBookRequest {}
+message ListBookResponse {
+  repeated Book books = 1;
+}
+
+message CreateBookRequest {
+  string title = 1;
+  string author_id = 2 [(buf.validate.field).string.uuid = true];
+}
+message CreateBookResponse {
+  Book book = 1;
+}
+
+message UpdateBookRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string title = 2;
+  string author_id = 3;
+}
+message UpdateBookResponse {
+  Book book = 1;
+}
+
+message DeleteBookRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message DeleteBookResponse {}
+
+// Author rpcs
+
+message GetAuthorRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message GetAuthorResponse {
+  Author author = 1;
+}
+
+message ListAuthorRequest {}
+message ListAuthorResponse {
+  repeated Author authors = 1;
+}
+
+message CreateAuthorRequest {
+  string name = 1;
+}
+message CreateAuthorResponse {
+  Author author = 1;
+}
+
+message UpdateAuthorRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2;
+}
+message UpdateAuthorResponse {
+  Author author = 1;
+}
+
+message DeleteAuthorRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message DeleteAuthorResponse {}
+
+// Example rpcs
+
+message ThrowPanicRequest {}
+message ThrowPanicResponse {}
+
+message ThrowServiceErrorRequest {}
+message ThrowServiceErrorResponse {}
+
+service BookService {
+  // Book rpcs
+  rpc GetBook(GetBookRequest) returns (GetBookResponse) {
+    option (google.api.http) = {get: "/v1/books/{id}"};
+  }
+  rpc ListBook(ListBookRequest) returns (ListBookResponse) {
+    option (google.api.http) = {get: "/v1/books"};
+  }
+  rpc CreateBook(CreateBookRequest) returns (CreateBookResponse) {
+    option (google.api.http) = {
+      post: "/v1/books"
+      body: "*"
+    };
+  }
+  rpc UpdateBook(UpdateBookRequest) returns (UpdateBookResponse) {
+    option (google.api.http) = {
+      patch: "/v1/books/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteBook(DeleteBookRequest) returns (DeleteBookResponse) {
+    option (google.api.http) = {delete: "/v1/books/{id}"};
+  }
+
+  // Authro rpcs
+  rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse) {
+    option (google.api.http) = {get: "/v1/authors/{id}"};
+  }
+  rpc ListAuthor(ListAuthorRequest) returns (ListAuthorResponse) {
+    option (google.api.http) = {get: "/v1/authors"};
+  }
+  rpc CreateAuthor(CreateAuthorRequest) returns (CreateAuthorResponse) {
+    option (google.api.http) = {
+      post: "/v1/authors"
+      body: "*"
+    };
+  }
+  rpc UpdateAuthor(UpdateAuthorRequest) returns (UpdateAuthorResponse) {
+    option (google.api.http) = {
+      patch: "/v1/authors/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteAuthor(DeleteAuthorRequest) returns (DeleteAuthorResponse) {
+    option (google.api.http) = {delete: "/v1/authors/{id}"};
+  }
+
+  // Exampl rpcs
+  rpc ThrowPanic(ThrowPanicRequest) returns (ThrowPanicResponse) {}
+  rpc ThrowServiceError(ThrowServiceErrorRequest) returns (ThrowServiceErrorResponse) {}
+}

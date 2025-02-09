@@ -16,7 +16,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/FotiadisM/mock-microservice/api/gen/go/auth/v1/authv1connect"
+	"github.com/FotiadisM/mock-microservice/api/gen/go/book/v1/bookv1connect"
 	"github.com/FotiadisM/mock-microservice/internal/config"
 	"github.com/FotiadisM/mock-microservice/pkg/ilog"
 )
@@ -51,7 +51,7 @@ func NewServer(config *config.Config, log *slog.Logger, services map[string]http
 	}
 
 	if config.Server.HTTP.Reflection {
-		reflector := grpcreflect.NewStaticReflector(authv1connect.AuthServiceName)
+		reflector := grpcreflect.NewStaticReflector(bookv1connect.BookServiceName)
 		mux.Handle(grpcreflect.NewHandlerV1(reflector))
 		mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 		log.Info("enabled server reflection")
