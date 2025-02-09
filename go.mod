@@ -9,7 +9,6 @@ require (
 	connectrpc.com/grpchealth v1.3.0
 	connectrpc.com/grpcreflect v1.2.0
 	connectrpc.com/otelconnect v0.7.1
-	connectrpc.com/validate v0.1.0
 	connectrpc.com/vanguard v0.3.0
 	github.com/XSAM/otelsql v0.36.0
 	github.com/bufbuild/protovalidate-go v0.8.2

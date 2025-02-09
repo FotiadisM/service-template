@@ -7,15 +7,13 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
-	"connectrpc.com/validate"
-
-	"github.com/bufbuild/protovalidate-go"
 
 	"github.com/FotiadisM/mock-microservice/internal/config"
 	svcErrors "github.com/FotiadisM/mock-microservice/internal/services/errors"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/errsanitizer"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
 	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/recovery"
+	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/validate"
 )
 
 var errUnexpected = errors.New("unexpected error")
@@ -46,10 +44,6 @@ func RecoveryMiddleware() connect.Interceptor {
 
 func ErrSanitizerMiddleware() connect.Interceptor {
 	errSanitizerFunc := func(err error) error {
-		if tErr := new(protovalidate.ValidationError); errors.As(err, &tErr) {
-			return connect.NewError(connect.CodeInvalidArgument, err)
-		}
-
 		if tErr := new(connect.Error); errors.As(err, &tErr) {
 			return err
 		}
