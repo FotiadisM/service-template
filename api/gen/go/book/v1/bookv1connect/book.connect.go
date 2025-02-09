@@ -65,23 +65,6 @@ const (
 	BookServiceThrowServiceErrorProcedure = "/book.v1.BookService/ThrowServiceError"
 )
 
-// These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
-var (
-	bookServiceServiceDescriptor                 = v1.File_book_v1_book_proto.Services().ByName("BookService")
-	bookServiceGetBookMethodDescriptor           = bookServiceServiceDescriptor.Methods().ByName("GetBook")
-	bookServiceListBookMethodDescriptor          = bookServiceServiceDescriptor.Methods().ByName("ListBook")
-	bookServiceCreateBookMethodDescriptor        = bookServiceServiceDescriptor.Methods().ByName("CreateBook")
-	bookServiceUpdateBookMethodDescriptor        = bookServiceServiceDescriptor.Methods().ByName("UpdateBook")
-	bookServiceDeleteBookMethodDescriptor        = bookServiceServiceDescriptor.Methods().ByName("DeleteBook")
-	bookServiceGetAuthorMethodDescriptor         = bookServiceServiceDescriptor.Methods().ByName("GetAuthor")
-	bookServiceListAuthorMethodDescriptor        = bookServiceServiceDescriptor.Methods().ByName("ListAuthor")
-	bookServiceCreateAuthorMethodDescriptor      = bookServiceServiceDescriptor.Methods().ByName("CreateAuthor")
-	bookServiceUpdateAuthorMethodDescriptor      = bookServiceServiceDescriptor.Methods().ByName("UpdateAuthor")
-	bookServiceDeleteAuthorMethodDescriptor      = bookServiceServiceDescriptor.Methods().ByName("DeleteAuthor")
-	bookServiceThrowPanicMethodDescriptor        = bookServiceServiceDescriptor.Methods().ByName("ThrowPanic")
-	bookServiceThrowServiceErrorMethodDescriptor = bookServiceServiceDescriptor.Methods().ByName("ThrowServiceError")
-)
-
 // BookServiceClient is a client for the book.v1.BookService service.
 type BookServiceClient interface {
 	// Book rpcs
@@ -110,77 +93,78 @@ type BookServiceClient interface {
 // http://api.acme.com or https://acme.com/grpc).
 func NewBookServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) BookServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
+	bookServiceMethods := v1.File_book_v1_book_proto.Services().ByName("BookService").Methods()
 	return &bookServiceClient{
 		getBook: connect.NewClient[v1.GetBookRequest, v1.GetBookResponse](
 			httpClient,
 			baseURL+BookServiceGetBookProcedure,
-			connect.WithSchema(bookServiceGetBookMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("GetBook")),
 			connect.WithClientOptions(opts...),
 		),
 		listBook: connect.NewClient[v1.ListBookRequest, v1.ListBookResponse](
 			httpClient,
 			baseURL+BookServiceListBookProcedure,
-			connect.WithSchema(bookServiceListBookMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("ListBook")),
 			connect.WithClientOptions(opts...),
 		),
 		createBook: connect.NewClient[v1.CreateBookRequest, v1.CreateBookResponse](
 			httpClient,
 			baseURL+BookServiceCreateBookProcedure,
-			connect.WithSchema(bookServiceCreateBookMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("CreateBook")),
 			connect.WithClientOptions(opts...),
 		),
 		updateBook: connect.NewClient[v1.UpdateBookRequest, v1.UpdateBookResponse](
 			httpClient,
 			baseURL+BookServiceUpdateBookProcedure,
-			connect.WithSchema(bookServiceUpdateBookMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("UpdateBook")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteBook: connect.NewClient[v1.DeleteBookRequest, v1.DeleteBookResponse](
 			httpClient,
 			baseURL+BookServiceDeleteBookProcedure,
-			connect.WithSchema(bookServiceDeleteBookMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("DeleteBook")),
 			connect.WithClientOptions(opts...),
 		),
 		getAuthor: connect.NewClient[v1.GetAuthorRequest, v1.GetAuthorResponse](
 			httpClient,
 			baseURL+BookServiceGetAuthorProcedure,
-			connect.WithSchema(bookServiceGetAuthorMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("GetAuthor")),
 			connect.WithClientOptions(opts...),
 		),
 		listAuthor: connect.NewClient[v1.ListAuthorRequest, v1.ListAuthorResponse](
 			httpClient,
 			baseURL+BookServiceListAuthorProcedure,
-			connect.WithSchema(bookServiceListAuthorMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("ListAuthor")),
 			connect.WithClientOptions(opts...),
 		),
 		createAuthor: connect.NewClient[v1.CreateAuthorRequest, v1.CreateAuthorResponse](
 			httpClient,
 			baseURL+BookServiceCreateAuthorProcedure,
-			connect.WithSchema(bookServiceCreateAuthorMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("CreateAuthor")),
 			connect.WithClientOptions(opts...),
 		),
 		updateAuthor: connect.NewClient[v1.UpdateAuthorRequest, v1.UpdateAuthorResponse](
 			httpClient,
 			baseURL+BookServiceUpdateAuthorProcedure,
-			connect.WithSchema(bookServiceUpdateAuthorMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("UpdateAuthor")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteAuthor: connect.NewClient[v1.DeleteAuthorRequest, v1.DeleteAuthorResponse](
 			httpClient,
 			baseURL+BookServiceDeleteAuthorProcedure,
-			connect.WithSchema(bookServiceDeleteAuthorMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("DeleteAuthor")),
 			connect.WithClientOptions(opts...),
 		),
 		throwPanic: connect.NewClient[v1.ThrowPanicRequest, v1.ThrowPanicResponse](
 			httpClient,
 			baseURL+BookServiceThrowPanicProcedure,
-			connect.WithSchema(bookServiceThrowPanicMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("ThrowPanic")),
 			connect.WithClientOptions(opts...),
 		),
 		throwServiceError: connect.NewClient[v1.ThrowServiceErrorRequest, v1.ThrowServiceErrorResponse](
 			httpClient,
 			baseURL+BookServiceThrowServiceErrorProcedure,
-			connect.WithSchema(bookServiceThrowServiceErrorMethodDescriptor),
+			connect.WithSchema(bookServiceMethods.ByName("ThrowServiceError")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -287,76 +271,77 @@ type BookServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	bookServiceMethods := v1.File_book_v1_book_proto.Services().ByName("BookService").Methods()
 	bookServiceGetBookHandler := connect.NewUnaryHandler(
 		BookServiceGetBookProcedure,
 		svc.GetBook,
-		connect.WithSchema(bookServiceGetBookMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("GetBook")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceListBookHandler := connect.NewUnaryHandler(
 		BookServiceListBookProcedure,
 		svc.ListBook,
-		connect.WithSchema(bookServiceListBookMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("ListBook")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceCreateBookHandler := connect.NewUnaryHandler(
 		BookServiceCreateBookProcedure,
 		svc.CreateBook,
-		connect.WithSchema(bookServiceCreateBookMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("CreateBook")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceUpdateBookHandler := connect.NewUnaryHandler(
 		BookServiceUpdateBookProcedure,
 		svc.UpdateBook,
-		connect.WithSchema(bookServiceUpdateBookMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("UpdateBook")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceDeleteBookHandler := connect.NewUnaryHandler(
 		BookServiceDeleteBookProcedure,
 		svc.DeleteBook,
-		connect.WithSchema(bookServiceDeleteBookMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("DeleteBook")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceGetAuthorHandler := connect.NewUnaryHandler(
 		BookServiceGetAuthorProcedure,
 		svc.GetAuthor,
-		connect.WithSchema(bookServiceGetAuthorMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("GetAuthor")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceListAuthorHandler := connect.NewUnaryHandler(
 		BookServiceListAuthorProcedure,
 		svc.ListAuthor,
-		connect.WithSchema(bookServiceListAuthorMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("ListAuthor")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceCreateAuthorHandler := connect.NewUnaryHandler(
 		BookServiceCreateAuthorProcedure,
 		svc.CreateAuthor,
-		connect.WithSchema(bookServiceCreateAuthorMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("CreateAuthor")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceUpdateAuthorHandler := connect.NewUnaryHandler(
 		BookServiceUpdateAuthorProcedure,
 		svc.UpdateAuthor,
-		connect.WithSchema(bookServiceUpdateAuthorMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("UpdateAuthor")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceDeleteAuthorHandler := connect.NewUnaryHandler(
 		BookServiceDeleteAuthorProcedure,
 		svc.DeleteAuthor,
-		connect.WithSchema(bookServiceDeleteAuthorMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("DeleteAuthor")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceThrowPanicHandler := connect.NewUnaryHandler(
 		BookServiceThrowPanicProcedure,
 		svc.ThrowPanic,
-		connect.WithSchema(bookServiceThrowPanicMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("ThrowPanic")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceThrowServiceErrorHandler := connect.NewUnaryHandler(
 		BookServiceThrowServiceErrorProcedure,
 		svc.ThrowServiceError,
-		connect.WithSchema(bookServiceThrowServiceErrorMethodDescriptor),
+		connect.WithSchema(bookServiceMethods.ByName("ThrowServiceError")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/book.v1.BookService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

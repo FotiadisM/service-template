@@ -29,7 +29,7 @@ devbox shell
 - [ ] Create github actions for validating code gen. (Need to solve: How do we handle depandabot's PRs?)
 - [ ] Create efficient Dockerfile
 - [ ] Finilaize project
-  - [ ] Create new service
+  - [x] Create new service
   - [ ] Update README
   - [ ] Update documentation on packages.
 

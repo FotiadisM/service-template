@@ -10,12 +10,12 @@ managed:
     - module: buf.build/bufbuild/protovalidate
       file_option: go_package_prefix
 plugins:
-  - remote: buf.build/protocolbuffers/go:v1.36.0
+  - remote: buf.build/protocolbuffers/go:v1.36.5
     out: api/gen/go
     opt: paths=source_relative
-  - remote: buf.build/connectrpc/go:v1.17.0
+  - remote: buf.build/connectrpc/go:v1.18.1
     out: api/gen/go
     opt:
       - paths=source_relative
-  - remote: buf.build/grpc-ecosystem/openapiv2:v2.24.0
+  - remote: buf.build/grpc-ecosystem/openapiv2:v2.26.0
     out: api/doc

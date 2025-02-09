@@ -59,7 +59,10 @@ tasks:
 
   buf:gen:
     desc: Generate code from protobuf files
-    cmd: buf generate ./api/proto
+    cmds:
+      - buf generate ./api/proto
+      - task: go:fmt
+      - task: config:fmt
 
   sql:fmt:
     desc: Format sql code
@@ -78,6 +81,7 @@ tasks:
     cmds:
       - sqlc generate
       - task: mocks:gen
+      - task: sql:fmt
 
   sql:migrations:new:emtpy:
     desc: Create a new empty migration file
