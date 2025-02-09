@@ -7,9 +7,9 @@ SELECT * FROM authors;
 
 -- name: CreateAuthor :exec
 INSERT INTO authors (
-  id, name, created_at, updated_at
+    id, name, created_at, updated_at
 ) VALUES (
-  $1, $2, $3, $4
+    $1, $2, $3, $4
 );
 
 -- name: DeleteAuthor :exec

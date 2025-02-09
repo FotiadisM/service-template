@@ -10,4 +10,3 @@ CREATE TABLE books (
         author_id
     ) REFERENCES authors (id)
 );
-

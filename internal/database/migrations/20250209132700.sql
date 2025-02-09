@@ -6,5 +6,9 @@ CREATE TABLE "public"."books" (
     "created_at" timestamptz NOT NULL DEFAULT now(),
     "updated_at" timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY ("id"),
-    CONSTRAINT "books_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "public"."authors" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION
+    CONSTRAINT "books_author_id_fkey" FOREIGN KEY (
+        "author_id"
+    ) REFERENCES "public"."authors" (
+        "id"
+    ) ON UPDATE NO ACTION ON DELETE NO ACTION
 );

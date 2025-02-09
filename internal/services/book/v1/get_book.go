@@ -7,10 +7,10 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
-	"github.com/google/uuid"
 )
 
 func (s *Service) GetBook(ctx context.Context, req *connect.Request[bookv1.GetBookRequest]) (*connect.Response[bookv1.GetBookResponse], error) {

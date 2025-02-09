@@ -9,12 +9,8 @@
       "name": "BookService"
     }
   ],
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
   "paths": {
     "/v1/authors": {
       "get": {
@@ -33,9 +29,7 @@
             }
           }
         },
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       },
       "post": {
         "operationId": "BookService_CreateAuthor",
@@ -63,9 +57,7 @@
             }
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       }
     },
     "/v1/authors/{id}": {
@@ -94,9 +86,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       },
       "delete": {
         "operationId": "BookService_DeleteAuthor",
@@ -122,9 +112,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       },
       "patch": {
         "operationId": "BookService_UpdateAuthor",
@@ -158,9 +146,7 @@
             }
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       }
     },
     "/v1/books": {
@@ -180,9 +166,7 @@
             }
           }
         },
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       },
       "post": {
         "operationId": "BookService_CreateBook",
@@ -210,9 +194,7 @@
             }
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       }
     },
     "/v1/books/{id}": {
@@ -241,9 +223,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       },
       "delete": {
         "operationId": "BookService_DeleteBook",
@@ -269,9 +249,7 @@
             "type": "string"
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       },
       "patch": {
         "operationId": "BookService_UpdateBook",
@@ -305,9 +283,7 @@
             }
           }
         ],
-        "tags": [
-          "BookService"
-        ]
+        "tags": ["BookService"]
       }
     }
   },
