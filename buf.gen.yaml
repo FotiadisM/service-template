@@ -9,6 +9,8 @@ managed:
       file_option: go_package_prefix
     - module: buf.build/bufbuild/protovalidate
       file_option: go_package_prefix
+    - module: buf.build/grpc-ecosystem/protoc-gen-swagger
+      file_option: go_package_prefix
 plugins:
   - remote: buf.build/protocolbuffers/go:v1.36.5
     out: api/gen/go
@@ -19,3 +21,5 @@ plugins:
       - paths=source_relative
   - remote: buf.build/grpc-ecosystem/openapiv2:v2.26.0
     out: api/doc
+    opt:
+      - ignore_comments=true

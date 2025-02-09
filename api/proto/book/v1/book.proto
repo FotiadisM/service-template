@@ -46,7 +46,7 @@ message ListBookResponse {
 }
 
 message CreateBookRequest {
-  string title = 1;
+  string title = 1 [(buf.validate.field).required = true];
   string author_id = 2 [(buf.validate.field).string.uuid = true];
 }
 message CreateBookResponse {
@@ -82,7 +82,7 @@ message ListAuthorResponse {
 }
 
 message CreateAuthorRequest {
-  string name = 1;
+  string name = 1 [(buf.validate.field).required = true];
 }
 message CreateAuthorResponse {
   Author author = 1;
