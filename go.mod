@@ -1,6 +1,6 @@
 module github.com/FotiadisM/service-template
 
-go 1.23.4
+go 1.24
 
 require (
 	ariga.io/atlas-go-sdk v0.6.5

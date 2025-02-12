@@ -69,11 +69,11 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/ipmiggm4x3qhwids93awci09hy8hy44x-buf-1.50.0",
+              "path": "/nix/store/drp9ix6dppvlb83ys2q4127gsccjqw5y-buf-1.50.0",
               "default": true
             }
           ],
-          "store_path": "/nix/store/ipmiggm4x3qhwids93awci09hy8hy44x-buf-1.50.0"
+          "store_path": "/nix/store/drp9ix6dppvlb83ys2q4127gsccjqw5y-buf-1.50.0"
         },
         "x86_64-darwin": {
           "outputs": [
@@ -338,8 +338,8 @@
       }
     },
     "gotestsum@latest": {
-      "last_modified": "2025-01-19T08:16:51Z",
-      "resolved": "github:NixOS/nixpkgs/50165c4f7eb48ce82bd063e1fb8047a0f515f8ce#gotestsum",
+      "last_modified": "2025-02-07T11:26:36Z",
+      "resolved": "github:NixOS/nixpkgs/d98abf5cf5914e5e4e9d57205e3af55ca90ffc1d#gotestsum",
       "source": "devbox-search",
       "version": "1.12.0-unstable-2024-09-17",
       "systems": {
@@ -377,11 +377,11 @@
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/cqv4x6qxmr269bn04hrcddhii5pxvhy9-gotestsum-1.12.0-unstable-2024-09-17",
+              "path": "/nix/store/vbkbg4pryakjidx24hbqrrmdkx2qafxd-gotestsum-1.12.0-unstable-2024-09-17",
               "default": true
             }
           ],
-          "store_path": "/nix/store/cqv4x6qxmr269bn04hrcddhii5pxvhy9-gotestsum-1.12.0-unstable-2024-09-17"
+          "store_path": "/nix/store/vbkbg4pryakjidx24hbqrrmdkx2qafxd-gotestsum-1.12.0-unstable-2024-09-17"
         }
       }
     },
@@ -530,66 +530,66 @@
       }
     },
     "sqlfluff@latest": {
-      "last_modified": "2025-01-19T08:16:51Z",
-      "resolved": "github:NixOS/nixpkgs/50165c4f7eb48ce82bd063e1fb8047a0f515f8ce#sqlfluff",
+      "last_modified": "2025-02-08T12:54:32Z",
+      "resolved": "github:NixOS/nixpkgs/fa35a3c8e17a3de613240fea68f876e5b4896aec#sqlfluff",
       "source": "devbox-search",
-      "version": "3.3.0",
+      "version": "3.3.1",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/fzq2rxj193zyrrzwlnmay0v0wgjlhklf-sqlfluff-3.3.0",
+              "path": "/nix/store/r8z96dmn5lkmvni4wapzyw4biim9gwsx-sqlfluff-3.3.1",
               "default": true
             },
             {
               "name": "dist",
-              "path": "/nix/store/v1mmk63317iq26sa5m2xsmdsy50ffkix-sqlfluff-3.3.0-dist"
+              "path": "/nix/store/qdz1a6j4vas4c2jsw5jdmi8hfcfb2bbw-sqlfluff-3.3.1-dist"
             }
           ],
-          "store_path": "/nix/store/fzq2rxj193zyrrzwlnmay0v0wgjlhklf-sqlfluff-3.3.0"
+          "store_path": "/nix/store/r8z96dmn5lkmvni4wapzyw4biim9gwsx-sqlfluff-3.3.1"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/rk7nd86yzi2airdcig74lb0l5chixpna-sqlfluff-3.3.0",
+              "path": "/nix/store/andykgqmkyvd7v6fs1by08qndhz6ffri-sqlfluff-3.3.1",
               "default": true
             },
             {
               "name": "dist",
-              "path": "/nix/store/2srlr9ka5zjkp1jfbrbky33sanzc388g-sqlfluff-3.3.0-dist"
+              "path": "/nix/store/l497f97bq2xvg6cmanxm967q64lbhdp6-sqlfluff-3.3.1-dist"
             }
           ],
-          "store_path": "/nix/store/rk7nd86yzi2airdcig74lb0l5chixpna-sqlfluff-3.3.0"
+          "store_path": "/nix/store/andykgqmkyvd7v6fs1by08qndhz6ffri-sqlfluff-3.3.1"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/1v95mkm1c3b5l4wdjs8nqw5pnqh93bmw-sqlfluff-3.3.0",
+              "path": "/nix/store/m9zich6npl7dw20vis2pyj7asmin6x6w-sqlfluff-3.3.1",
               "default": true
             },
             {
               "name": "dist",
-              "path": "/nix/store/yz6yb9m152krf590n22c6gc31s361awf-sqlfluff-3.3.0-dist"
+              "path": "/nix/store/l9bn614pmancsz2p50dy4d9a12k3bipi-sqlfluff-3.3.1-dist"
             }
           ],
-          "store_path": "/nix/store/1v95mkm1c3b5l4wdjs8nqw5pnqh93bmw-sqlfluff-3.3.0"
+          "store_path": "/nix/store/m9zich6npl7dw20vis2pyj7asmin6x6w-sqlfluff-3.3.1"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/avpgyxjvar4h1h483g7fgvgicv7gs1yc-sqlfluff-3.3.0",
+              "path": "/nix/store/7y1iy0g3bx811lbhmyn5azwfsnlyns0j-sqlfluff-3.3.1",
               "default": true
             },
             {
               "name": "dist",
-              "path": "/nix/store/fs70nma87jfjlxc60njg4c0pwp13h42q-sqlfluff-3.3.0-dist"
+              "path": "/nix/store/l5wkcj3pycggpmf03awlvy38yfd1d71p-sqlfluff-3.3.1-dist"
             }
           ],
-          "store_path": "/nix/store/avpgyxjvar4h1h483g7fgvgicv7gs1yc-sqlfluff-3.3.0"
+          "store_path": "/nix/store/7y1iy0g3bx811lbhmyn5azwfsnlyns0j-sqlfluff-3.3.1"
         }
       }
     }
