@@ -14,7 +14,7 @@ type streamingClientInterceptor struct {
 	connect.StreamingClientConn
 
 	errHanlderFn ErrorHandlerFunc
-	validator    *protovalidate.Validator
+	validator    protovalidate.Validator
 }
 
 func (s *streamingClientInterceptor) Send(msg any) error {
@@ -29,7 +29,7 @@ func (s *streamingClientInterceptor) Send(msg any) error {
 type streamingHandlerInterceptor struct {
 	connect.StreamingHandlerConn
 
-	validator *protovalidate.Validator
+	validator protovalidate.Validator
 }
 
 func (s *streamingHandlerInterceptor) Receive(msg any) error {
@@ -40,7 +40,7 @@ func (s *streamingHandlerInterceptor) Receive(msg any) error {
 	return validate(s.validator, msg)
 }
 
-func validate(validator *protovalidate.Validator, msg any) error {
+func validate(validator protovalidate.Validator, msg any) error {
 	protoMsg, ok := msg.(proto.Message)
 	if !ok {
 		panic(fmt.Sprintf("expected proto.Message, got %T", msg))
@@ -61,7 +61,7 @@ func validate(validator *protovalidate.Validator, msg any) error {
 }
 
 type Interceptor struct {
-	validator    *protovalidate.Validator
+	validator    protovalidate.Validator
 	errHanlderFn ErrorHandlerFunc
 }
 

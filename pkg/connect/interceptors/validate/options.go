@@ -5,7 +5,7 @@ import "github.com/bufbuild/protovalidate-go"
 type ErrorHandlerFunc func(err error) error
 
 type options struct {
-	validator    *protovalidate.Validator
+	validator    protovalidate.Validator
 	errHanlderFn ErrorHandlerFunc
 }
 
@@ -17,7 +17,7 @@ func defaultOptions() *options {
 
 type Option func(o *options)
 
-func WithValidator(validator *protovalidate.Validator) Option {
+func WithValidator(validator protovalidate.Validator) Option {
 	return func(o *options) {
 		o.validator = validator
 	}

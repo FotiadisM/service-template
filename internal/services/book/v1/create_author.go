@@ -20,7 +20,7 @@ func (s *Service) CreateAuthor(ctx context.Context, req *connect.Request[bookv1.
 		return nil, fmt.Errorf("failed to create uuid %w", err)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	author := queries.CreateAuthorParams{
 		ID:        id,
 		Name:      req.Msg.Name,

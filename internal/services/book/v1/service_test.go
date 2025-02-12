@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -42,7 +43,8 @@ func (s *UnitTestingSuite) SetupSuite(t *testing.T) {
 	s.Service = &Service{db: s.DB}
 
 	config := test.NewConfig()
-	svcPath, svcHandler := bookv1connect.NewBookServiceHandler(s.Service,
+	svcPath, svcHandler := bookv1connect.NewBookServiceHandler(
+		s.Service,
 		connect.WithInterceptors(test.ChainMiddleware(t, config)...),
 	)
 
@@ -78,8 +80,8 @@ type endpointTestingSuiteInternal struct {
 type EndpointTestingSuite struct {
 	_internal *endpointTestingSuiteInternal
 
-	DB      *sql.DB
-	Service *Service
+	Service    *Service
+	TestingDBs sync.Map
 
 	ServerURL string
 	HTTPClint *http.Client
@@ -120,7 +122,8 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	s.Service = &Service{db: nil}
 
 	config := test.NewConfig()
-	svcPath, svcHandler := bookv1connect.NewBookServiceHandler(s.Service,
+	svcPath, svcHandler := bookv1connect.NewBookServiceHandler(
+		s.Service,
 		connect.WithInterceptors(test.ChainMiddleware(t, config)...),
 	)
 
@@ -165,7 +168,7 @@ func (s *EndpointTestingSuite) SetupTest(t *testing.T) {
 
 	conn.SetMaxOpenConns(1)
 	conn.SetMaxIdleConns(1)
-	s.DB = conn
+	s.TestingDBs.Store(t.Name(), conn)
 
 	db, err := database.NewFromDBConn(conn)
 	require.NoError(t, err, "failed to create db.DB")
@@ -176,11 +179,27 @@ func (s *EndpointTestingSuite) SetupTest(t *testing.T) {
 func (s *EndpointTestingSuite) TearDownTest(t *testing.T) {
 	t.Helper()
 
-	err := s.DB.Close()
-	if err != nil {
-		t.Logf("failed to close server: %v\n", err)
+	v, ok := s.TestingDBs.Load(t.Name())
+	if !ok {
+		t.Errorf("failed to load testing db for %s", t.Name())
+		return
 	}
-	err = testcontainers.TerminateContainer(s._internal.postgresContainer)
+	db, ok := v.(*sql.DB)
+	if !ok {
+		t.Errorf("db type is not *sql.DB")
+		return
+	}
+
+	err := db.Close()
+	if err != nil {
+		t.Errorf("failed to close server: %v\n", err)
+	}
+}
+
+func (s *EndpointTestingSuite) TearDownSuit(t *testing.T) {
+	t.Helper()
+
+	err := testcontainers.TerminateContainer(s._internal.postgresContainer)
 	if err != nil {
 		t.Logf("failed to terminate container: %v\n", err)
 	}
