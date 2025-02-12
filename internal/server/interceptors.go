@@ -8,12 +8,12 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
 
-	"github.com/FotiadisM/mock-microservice/internal/config"
-	svcErrors "github.com/FotiadisM/mock-microservice/internal/services/errors"
-	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/errsanitizer"
-	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/logging"
-	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/recovery"
-	"github.com/FotiadisM/mock-microservice/pkg/connect/interceptors/validate"
+	"github.com/FotiadisM/service-template/internal/config"
+	svcErrors "github.com/FotiadisM/service-template/internal/services/errors"
+	"github.com/FotiadisM/service-template/pkg/connect/interceptors/errsanitizer"
+	"github.com/FotiadisM/service-template/pkg/connect/interceptors/logging"
+	"github.com/FotiadisM/service-template/pkg/connect/interceptors/recovery"
+	"github.com/FotiadisM/service-template/pkg/connect/interceptors/validate"
 )
 
 var errUnexpected = errors.New("unexpected error")

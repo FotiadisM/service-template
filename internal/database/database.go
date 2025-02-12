@@ -9,9 +9,9 @@ import (
 	// PostgreSQL databse driver.
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/services/book/v1/queries"
-	"github.com/FotiadisM/mock-microservice/pkg/ilog"
+	"github.com/FotiadisM/service-template/internal/config"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/queries"
+	"github.com/FotiadisM/service-template/pkg/ilog"
 )
 
 type DB struct {

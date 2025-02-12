@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/FotiadisM/mock-microservice/pkg/http/middleware"
+	"github.com/FotiadisM/service-template/pkg/http/middleware"
 )
 
 var ErrNoDataFound = errors.New("no data found")

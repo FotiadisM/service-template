@@ -13,11 +13,11 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/FotiadisM/mock-microservice/api/gen/go/book/v1/bookv1connect"
-	"github.com/FotiadisM/mock-microservice/internal/database"
-	"github.com/FotiadisM/mock-microservice/internal/services/book/v1/queries/mocks"
-	"github.com/FotiadisM/mock-microservice/internal/test"
-	"github.com/FotiadisM/mock-microservice/pkg/suite"
+	"github.com/FotiadisM/service-template/api/gen/go/book/v1/bookv1connect"
+	"github.com/FotiadisM/service-template/internal/database"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/queries/mocks"
+	"github.com/FotiadisM/service-template/internal/test"
+	"github.com/FotiadisM/service-template/pkg/suite"
 )
 
 type unitTestingSuiteInternal struct {

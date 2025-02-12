@@ -28,22 +28,29 @@ type DB struct {
 }
 
 type Redis struct {
-	URI string `env:"URI, required"`
+	Host     string `env:"HOST, required"`
+	Port     int    `env:"PORT, required"`
+	Username string `env:"USER"              json:"-"`
+	Password string `env:"PASS"              json:"-"`
+	Database int    `env:"DBNAME, default=0"`
 }
 
-type GRPC struct {
-	Addr       string `env:"ADDR, default=:8080"`
-	Reflection bool   `env:"REFLECTION"`
-	// 	ConnectionTimeout sets the timeout for connection establishment (up to and including HTTP/2 handshaking)
-	// for all new connections. A zero or negative value will result in an immediate timeout (120s).
-	ConnectionTimeout int64 `env:"CONNECTION_TIMEOUT, default=120"`
-	// MaxHeaderListSize sets the max (uncompressed) size of header list that the server is prepared to accept (1MB).
-	MaxHeaderListSize uint32 `env:"MAX_HEADER_LIST_SIZE, default=1048576"`
-	// MaxRecvMsgSize sets the max message size in bytes the server can receive (4MB).
-	MaxRecvMsgSize int `env:"MAX_RECV_MSG_SIZE, default=4194304"`
+type Instrumentation struct {
+	OtelExporterAddr string `env:"OTEL_EXPORTER_ADDR"`
+	OtelSDKDisabled  bool   `env:"OTEL_SDK_DISABLED"`
 }
 
-type HTTP struct {
+type Cors struct {
+	AllowedOrigins      []string `env:"ALLOWED_ORIGINS, default=*"`
+	AllowedMethods      []string `env:"ALLOWED_METHODS, default=HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS"`
+	AllowedHeaders      []string `env:"ALLOWED_HEADERS, default=*"`
+	ExposedHeaders      []string `env:"EXPOSED_HEADERS, default=*"`
+	MaxAge              int      `env:"MAX_AGE, default=7200"`
+	AllowCredentials    bool     `env:"ALLOW_CREDENTIALS, default=false"`
+	AllowPrivateNetwork bool     `env:"ALLOW_PRIVATE_NETWORK, default=false"`
+}
+
+type Server struct {
 	Addr string `env:"ADDR, default=:8080"`
 
 	// Reflection enables gRPC compatible server reflection
@@ -70,28 +77,9 @@ type HTTP struct {
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT, default=5s"`
 }
 
-type Instrumentation struct {
-	OtelExporterAddr string `env:"OTEL_EXPORTER_ADDR"`
-	OtelSDKDisabled  bool   `env:"OTEL_SDK_DISABLED"`
-}
-
-type Server struct {
-	Inst Instrumentation
-	HTTP HTTP `env:", prefix=HTTPP_SERVER_"`
-}
-
-type Cors struct {
-	AllowedOrigins      []string `env:"ALLOWED_ORIGINS, default=*"`
-	AllowedMethods      []string `env:"ALLOWED_METHODS, default=HEAD,GET,POST,PUT,PATCH,DELETE,OPTIONS"`
-	AllowedHeaders      []string `env:"ALLOWED_HEADERS, default=*"`
-	ExposedHeaders      []string `env:"EXPOSED_HEADERS, default=*"`
-	MaxAge              int      `env:"MAX_AGE, default=7200"`
-	AllowCredentials    bool     `env:"ALLOW_CREDENTIALS, default=false"`
-	AllowPrivateNetwork bool     `env:"ALLOW_PRIVATE_NETWORK, default=false"`
-}
-
 type Config struct {
-	Server  Server
+	Inst    Instrumentation
+	Server  Server  `env:", prefix=SERVER_"`
 	DB      DB      `env:", prefix=PSQL_"`
 	Logging Logging `env:", prefix=LOGGING_"`
 	Cors    Cors    `env:", prefix=CORS_"`

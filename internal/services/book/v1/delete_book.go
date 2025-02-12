@@ -9,7 +9,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
 )
 
 func (s *Service) DeleteBook(ctx context.Context, req *connect.Request[bookv1.DeleteBookRequest]) (*connect.Response[bookv1.DeleteBookResponse], error) {

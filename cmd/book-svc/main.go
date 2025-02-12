@@ -8,15 +8,16 @@ import (
 	"os"
 
 	"connectrpc.com/connect"
-	"github.com/rs/cors"
+	"connectrpc.com/grpchealth"
 
-	"github.com/FotiadisM/mock-microservice/api/gen/go/book/v1/bookv1connect"
-	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/database"
-	"github.com/FotiadisM/mock-microservice/internal/server"
-	bookv1 "github.com/FotiadisM/mock-microservice/internal/services/book/v1"
-	"github.com/FotiadisM/mock-microservice/pkg/ilog"
-	"github.com/FotiadisM/mock-microservice/pkg/version"
+	"github.com/FotiadisM/service-template/api/docs"
+	"github.com/FotiadisM/service-template/api/gen/go/book/v1/bookv1connect"
+	"github.com/FotiadisM/service-template/internal/config"
+	"github.com/FotiadisM/service-template/internal/database"
+	"github.com/FotiadisM/service-template/internal/server"
+	bookv1 "github.com/FotiadisM/service-template/internal/services/book/v1"
+	"github.com/FotiadisM/service-template/pkg/ilog"
+	"github.com/FotiadisM/service-template/pkg/version"
 )
 
 func main() {
@@ -35,9 +36,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	if !config.Server.Inst.OtelSDKDisabled {
+	if !config.Inst.OtelSDKDisabled {
 		var shutdownFunc otelShutDownFunc
-		shutdownFunc, err = initializeOTEL(ctx, log, config.Server.Inst.OtelExporterAddr)
+		shutdownFunc, err = initializeOTEL(ctx, log, config.Inst.OtelExporterAddr)
 		if err != nil {
 			log.Error("failed to initialize otel SDK", ilog.Err(err))
 		}
@@ -49,31 +50,24 @@ func main() {
 		}()
 	}
 
-	checker := &healthChecker{
+	mux := http.NewServeMux()
+	healthChecker := &healthChecker{
 		DB: db.DB,
 	}
-	svc := bookv1.NewService(db)
+	mux.Handle(grpchealth.NewHandler(healthChecker))
+	mux.Handle("/api/docs/", http.StripPrefix("/api/docs/", http.FileServerFS(docs.DocsFS)))
 
+	svc := bookv1.NewService(db)
 	interceptors := server.ChainMiddleware(config, log)
 	booksvcPath, booksvcHanlder := bookv1connect.NewBookServiceHandler(svc,
 		connect.WithInterceptors(interceptors...),
 	)
 
-	cors := cors.New(cors.Options{
-		AllowedOrigins:      config.Cors.AllowedOrigins,
-		AllowedMethods:      config.Cors.AllowedMethods,
-		AllowedHeaders:      config.Cors.AllowedHeaders,
-		ExposedHeaders:      config.Cors.ExposedHeaders,
-		MaxAge:              config.Cors.MaxAge,
-		AllowCredentials:    config.Cors.AllowCredentials,
-		AllowPrivateNetwork: config.Cors.AllowPrivateNetwork,
-	})
-	booksvcHanlder = cors.Handler(booksvcHanlder)
-
-	services := map[string]http.Handler{
+	serverHandler := server.ChainHandlers(mux, config, log, map[string]http.Handler{
 		booksvcPath: booksvcHanlder,
-	}
-	server, err := server.NewServer(config, log, services, checker)
+	})
+
+	server, err := server.NewServer(config, log, serverHandler)
 	if err != nil {
 		log.Error("failed to create server", ilog.Err(err))
 	}

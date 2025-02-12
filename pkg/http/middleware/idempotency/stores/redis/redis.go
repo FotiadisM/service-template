@@ -9,7 +9,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/FotiadisM/mock-microservice/pkg/http/middleware/idempotency"
+	"github.com/FotiadisM/service-template/pkg/http/middleware/idempotency"
 )
 
 type RedisStore struct {

@@ -1,4 +1,4 @@
-# Mock microservice
+# Service Template
 
 ## Getting Started
 

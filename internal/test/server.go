@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"connectrpc.com/vanguard"
 	"github.com/stretchr/testify/require"
 
-	"github.com/FotiadisM/mock-microservice/internal/config"
+	"github.com/FotiadisM/service-template/internal/config"
+	"github.com/FotiadisM/service-template/internal/server"
 )
 
 type Server struct {
@@ -22,18 +22,13 @@ func NewServer(t *testing.T, config *config.Config, services map[string]http.Han
 	t.Helper()
 
 	mux := http.NewServeMux()
-	if config.Server.HTTP.DisableRESTTranscoding {
+	if config.Server.DisableRESTTranscoding {
 		for path, handler := range services {
 			mux.Handle(path, handler)
 		}
 	} else {
-		vanrguardServices := []*vanguard.Service{}
-		for path, handler := range services {
-			vanrguardServices = append(vanrguardServices, vanguard.NewService(path, handler))
-		}
-		transcoder, err := vanguard.NewTranscoder(vanrguardServices)
-		require.NoError(t, err, "failed to create vanguard transcoder")
-		mux.Handle("/", transcoder)
+		err := server.HTTPTranscoderHandler(mux, services)
+		require.NoError(t, err, "failed to create HTTP transcoder handler")
 	}
 
 	server := httptest.NewUnstartedServer(mux)

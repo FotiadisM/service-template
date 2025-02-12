@@ -3,7 +3,7 @@ package errors
 import (
 	"connectrpc.com/connect"
 
-	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
 )
 
 type ErrorCode string

@@ -12,7 +12,7 @@ import (
 	"connectrpc.com/connect"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/FotiadisM/mock-microservice/pkg/ilog"
+	"github.com/FotiadisM/service-template/pkg/ilog"
 )
 
 const (

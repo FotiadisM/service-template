@@ -10,7 +10,7 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
 )
 
 type WrappedResponseWriter struct {

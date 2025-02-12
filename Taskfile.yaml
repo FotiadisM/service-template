@@ -68,7 +68,7 @@ tasks:
     desc: Format sql code
     cmds:
       - atlas schema fmt
-      - sqlfluff format -d postgres
+      - sqlfluff format -d postgres --disable-progress-bar
       - task: sql:migrations:hash
 
   sql:lint:
@@ -126,4 +126,4 @@ tasks:
 
   config:fmt:
     desc: Format config files
-    cmd: prettier --write .
+    cmd: prettier --write --log-level warn .

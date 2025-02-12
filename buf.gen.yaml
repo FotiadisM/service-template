@@ -3,7 +3,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/FotiadisM/mock-microservice/api/gen/go
+      value: github.com/FotiadisM/service-template/api/gen/go
   disable:
     - module: buf.build/googleapis/googleapis
       file_option: go_package_prefix
@@ -20,6 +20,6 @@ plugins:
     opt:
       - paths=source_relative
   - remote: buf.build/grpc-ecosystem/openapiv2:v2.26.0
-    out: api/doc
+    out: api/docs
     opt:
       - ignore_comments=true

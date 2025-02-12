@@ -1,4 +1,4 @@
-module github.com/FotiadisM/mock-microservice
+module github.com/FotiadisM/service-template
 
 go 1.23.4
 

@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/FotiadisM/mock-microservice/pkg/ilog"
+	"github.com/FotiadisM/service-template/pkg/ilog"
 )
 
 type otelShutDownFunc func(ctx context.Context) error

@@ -1,6 +1,6 @@
 version: v2
 modules:
-  - name: buf.build/FotiadisM/book-svc
+  - name: buf.build/FotiadisM/service-template
 deps:
   - buf.build/googleapis/googleapis
   - buf.build/bufbuild/protovalidate

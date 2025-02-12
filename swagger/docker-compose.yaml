@@ -1,0 +1,7 @@
+services:
+  swagger:
+    image: swaggerapi/swagger-ui:v5.18.3
+    network_mode: "host"
+    environment:
+      PORT: 8085
+      SWAGGER_JSON_URL: http://localhost:8080/api/docs/book/v1/book.swagger.json

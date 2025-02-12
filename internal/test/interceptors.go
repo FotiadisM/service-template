@@ -7,8 +7,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/stretchr/testify/require"
 
-	"github.com/FotiadisM/mock-microservice/internal/config"
-	"github.com/FotiadisM/mock-microservice/internal/server"
+	"github.com/FotiadisM/service-template/internal/config"
+	"github.com/FotiadisM/service-template/internal/server"
 )
 
 func ChainMiddleware(t *testing.T, _ *config.Config) []connect.Interceptor {

@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
-	"github.com/FotiadisM/mock-microservice/internal/services/book/v1/queries"
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/queries"
 )
 
 func (s *Service) CreateAuthor(ctx context.Context, req *connect.Request[bookv1.CreateAuthorRequest]) (*connect.Response[bookv1.CreateAuthorResponse], error) {

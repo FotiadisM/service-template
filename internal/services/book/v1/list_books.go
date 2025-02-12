@@ -7,7 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
 )
 
 func (s *Service) ListBook(ctx context.Context, _ *connect.Request[bookv1.ListBookRequest]) (*connect.Response[bookv1.ListBookResponse], error) {

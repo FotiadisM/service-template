@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	bookv1 "github.com/FotiadisM/mock-microservice/api/gen/go/book/v1"
-	"github.com/FotiadisM/mock-microservice/internal/services/book/v1/queries"
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/queries"
 )
 
 func (s *Service) CreateBook(ctx context.Context, req *connect.Request[bookv1.CreateBookRequest]) (*connect.Response[bookv1.CreateBookResponse], error) {
