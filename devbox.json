@@ -12,7 +12,10 @@
     "sqlfluff@latest",
     "delve@1.24.0",
     "grpcui@latest",
-    "nodePackages.prettier@latest"
+    "nodePackages.prettier@latest",
+    "protoc-gen-go@1.36.4",
+    "protoc-gen-connect-go@1.18.1",
+    "grpc-gateway@2.26.0"
   ],
   "env_from": "local.env"
 }
