@@ -9,9 +9,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
-
 	"github.com/FotiadisM/service-template/internal/config"
 	"github.com/FotiadisM/service-template/pkg/ilog"
 )
@@ -24,14 +21,19 @@ type Server struct {
 }
 
 func NewServer(config *config.Config, log *slog.Logger, mux http.Handler) (*Server, error) {
+	protocols := &http.Protocols{}
+	protocols.SetHTTP1(true)
+	protocols.SetHTTP2(true)
+	protocols.SetUnencryptedHTTP2(true)
 	httpServer := &http.Server{
 		Addr:              config.Server.Addr,
-		Handler:           h2c.NewHandler(mux, &http2.Server{}),
+		Handler:           mux,
 		ReadTimeout:       config.Server.ReadTimeout,
 		ReadHeaderTimeout: config.Server.ReadHeaderTimeout,
 		WriteTimeout:      config.Server.WriteTimeout,
 		IdleTimeout:       config.Server.IdleTimeout,
 		MaxHeaderBytes:    config.Server.MaxHeaderBytes,
+		Protocols:         protocols,
 	}
 
 	server := &Server{
