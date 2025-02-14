@@ -27,7 +27,11 @@ func main() {
 	ctx := context.Background()
 	config := config.NewConfig(ctx)
 
-	log := ilog.NewLogger()
+	log := ilog.NewLogger(
+		ilog.WithLogLevel(slog.Level(config.Logging.Level)),
+		ilog.WithJSON(config.Logging.JSON),
+		ilog.WithAddSource(config.Logging.AddSource),
+	)
 	slog.SetDefault(log)
 
 	db, err := database.New(config.DB)

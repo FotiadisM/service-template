@@ -10,9 +10,9 @@ import (
 )
 
 type Logging struct {
-	Level     string `env:"LEVEL, default=debug"`
-	Output    string `env:"OUTPUT, default=text"`
-	AddSource bool   `env:"ADD_SOURCE, default=false"`
+	Level     int  `env:"LEVEL, default=0"`
+	JSON      bool `env:"JSON, default=false"`
+	AddSource bool `env:"ADD_SOURCE, default=false"`
 }
 
 type DB struct {
