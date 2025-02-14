@@ -27,7 +27,7 @@ devbox shell
   - [ ] Integrate snapshot testing
 - [ ] Test for all packages
 - [ ] Create github actions for validating code gen. (Need to solve: How do we handle depandabot's PRs?)
-- [ ] Create efficient Dockerfile
+- [x] Create efficient Dockerfile
 - [ ] Finilaize project
   - [x] Create new service
   - [ ] Update README

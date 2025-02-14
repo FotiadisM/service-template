@@ -1,9 +1,24 @@
-/.git
+.git
+.devbox
+.github
 
-/bin
-/proto
-/api/doc
+api/proto
+otel
+swagger
 
-/Dockerfile
-/.dockerignore
-/README.md
+.dockerignore
+.editorconfig
+.envrc
+.gitignore
+.golangci.yaml
+.mockery.yaml
+atlas.hcl
+buf.gen.yaml
+devbox.json
+devbox.lock
+docker-compose.yaml
+Dockerfile
+local.env
+README.md
+sqlc.yaml
+Taskfile.yaml

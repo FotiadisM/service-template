@@ -1,15 +1,15 @@
-FROM golang:1.22.1-alpine3.19 as build
+FROM golang:1.24-alpine3.21 AS build
 
-ENV GOOS linux
-ENV CGO_ENABLED 0
+ENV GOOS=linux
+ENV CGO_ENABLED=0
 
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o app
+RUN go build -o app ./cmd/book-svc
 
-FROM alpine:3.19
+FROM alpine:3.21
 RUN apk add --no-cache ca-certificates
 COPY --from=build --chown=1001:1001 app .
 
