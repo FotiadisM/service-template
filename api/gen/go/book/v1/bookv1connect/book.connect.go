@@ -37,8 +37,8 @@ const (
 const (
 	// BookServiceGetBookProcedure is the fully-qualified name of the BookService's GetBook RPC.
 	BookServiceGetBookProcedure = "/book.v1.BookService/GetBook"
-	// BookServiceListBookProcedure is the fully-qualified name of the BookService's ListBook RPC.
-	BookServiceListBookProcedure = "/book.v1.BookService/ListBook"
+	// BookServiceListBooksProcedure is the fully-qualified name of the BookService's ListBooks RPC.
+	BookServiceListBooksProcedure = "/book.v1.BookService/ListBooks"
 	// BookServiceCreateBookProcedure is the fully-qualified name of the BookService's CreateBook RPC.
 	BookServiceCreateBookProcedure = "/book.v1.BookService/CreateBook"
 	// BookServiceUpdateBookProcedure is the fully-qualified name of the BookService's UpdateBook RPC.
@@ -47,8 +47,8 @@ const (
 	BookServiceDeleteBookProcedure = "/book.v1.BookService/DeleteBook"
 	// BookServiceGetAuthorProcedure is the fully-qualified name of the BookService's GetAuthor RPC.
 	BookServiceGetAuthorProcedure = "/book.v1.BookService/GetAuthor"
-	// BookServiceListAuthorProcedure is the fully-qualified name of the BookService's ListAuthor RPC.
-	BookServiceListAuthorProcedure = "/book.v1.BookService/ListAuthor"
+	// BookServiceListAuthorsProcedure is the fully-qualified name of the BookService's ListAuthors RPC.
+	BookServiceListAuthorsProcedure = "/book.v1.BookService/ListAuthors"
 	// BookServiceCreateAuthorProcedure is the fully-qualified name of the BookService's CreateAuthor
 	// RPC.
 	BookServiceCreateAuthorProcedure = "/book.v1.BookService/CreateAuthor"
@@ -69,13 +69,13 @@ const (
 type BookServiceClient interface {
 	// Book rpcs
 	GetBook(context.Context, *connect.Request[v1.GetBookRequest]) (*connect.Response[v1.GetBookResponse], error)
-	ListBook(context.Context, *connect.Request[v1.ListBookRequest]) (*connect.Response[v1.ListBookResponse], error)
+	ListBooks(context.Context, *connect.Request[v1.ListBooksRequest]) (*connect.Response[v1.ListBooksResponse], error)
 	CreateBook(context.Context, *connect.Request[v1.CreateBookRequest]) (*connect.Response[v1.CreateBookResponse], error)
 	UpdateBook(context.Context, *connect.Request[v1.UpdateBookRequest]) (*connect.Response[v1.UpdateBookResponse], error)
 	DeleteBook(context.Context, *connect.Request[v1.DeleteBookRequest]) (*connect.Response[v1.DeleteBookResponse], error)
 	// Authro rpcs
 	GetAuthor(context.Context, *connect.Request[v1.GetAuthorRequest]) (*connect.Response[v1.GetAuthorResponse], error)
-	ListAuthor(context.Context, *connect.Request[v1.ListAuthorRequest]) (*connect.Response[v1.ListAuthorResponse], error)
+	ListAuthors(context.Context, *connect.Request[v1.ListAuthorsRequest]) (*connect.Response[v1.ListAuthorsResponse], error)
 	CreateAuthor(context.Context, *connect.Request[v1.CreateAuthorRequest]) (*connect.Response[v1.CreateAuthorResponse], error)
 	UpdateAuthor(context.Context, *connect.Request[v1.UpdateAuthorRequest]) (*connect.Response[v1.UpdateAuthorResponse], error)
 	DeleteAuthor(context.Context, *connect.Request[v1.DeleteAuthorRequest]) (*connect.Response[v1.DeleteAuthorResponse], error)
@@ -101,10 +101,10 @@ func NewBookServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(bookServiceMethods.ByName("GetBook")),
 			connect.WithClientOptions(opts...),
 		),
-		listBook: connect.NewClient[v1.ListBookRequest, v1.ListBookResponse](
+		listBooks: connect.NewClient[v1.ListBooksRequest, v1.ListBooksResponse](
 			httpClient,
-			baseURL+BookServiceListBookProcedure,
-			connect.WithSchema(bookServiceMethods.ByName("ListBook")),
+			baseURL+BookServiceListBooksProcedure,
+			connect.WithSchema(bookServiceMethods.ByName("ListBooks")),
 			connect.WithClientOptions(opts...),
 		),
 		createBook: connect.NewClient[v1.CreateBookRequest, v1.CreateBookResponse](
@@ -131,10 +131,10 @@ func NewBookServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(bookServiceMethods.ByName("GetAuthor")),
 			connect.WithClientOptions(opts...),
 		),
-		listAuthor: connect.NewClient[v1.ListAuthorRequest, v1.ListAuthorResponse](
+		listAuthors: connect.NewClient[v1.ListAuthorsRequest, v1.ListAuthorsResponse](
 			httpClient,
-			baseURL+BookServiceListAuthorProcedure,
-			connect.WithSchema(bookServiceMethods.ByName("ListAuthor")),
+			baseURL+BookServiceListAuthorsProcedure,
+			connect.WithSchema(bookServiceMethods.ByName("ListAuthors")),
 			connect.WithClientOptions(opts...),
 		),
 		createAuthor: connect.NewClient[v1.CreateAuthorRequest, v1.CreateAuthorResponse](
@@ -173,12 +173,12 @@ func NewBookServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 // bookServiceClient implements BookServiceClient.
 type bookServiceClient struct {
 	getBook           *connect.Client[v1.GetBookRequest, v1.GetBookResponse]
-	listBook          *connect.Client[v1.ListBookRequest, v1.ListBookResponse]
+	listBooks         *connect.Client[v1.ListBooksRequest, v1.ListBooksResponse]
 	createBook        *connect.Client[v1.CreateBookRequest, v1.CreateBookResponse]
 	updateBook        *connect.Client[v1.UpdateBookRequest, v1.UpdateBookResponse]
 	deleteBook        *connect.Client[v1.DeleteBookRequest, v1.DeleteBookResponse]
 	getAuthor         *connect.Client[v1.GetAuthorRequest, v1.GetAuthorResponse]
-	listAuthor        *connect.Client[v1.ListAuthorRequest, v1.ListAuthorResponse]
+	listAuthors       *connect.Client[v1.ListAuthorsRequest, v1.ListAuthorsResponse]
 	createAuthor      *connect.Client[v1.CreateAuthorRequest, v1.CreateAuthorResponse]
 	updateAuthor      *connect.Client[v1.UpdateAuthorRequest, v1.UpdateAuthorResponse]
 	deleteAuthor      *connect.Client[v1.DeleteAuthorRequest, v1.DeleteAuthorResponse]
@@ -191,9 +191,9 @@ func (c *bookServiceClient) GetBook(ctx context.Context, req *connect.Request[v1
 	return c.getBook.CallUnary(ctx, req)
 }
 
-// ListBook calls book.v1.BookService.ListBook.
-func (c *bookServiceClient) ListBook(ctx context.Context, req *connect.Request[v1.ListBookRequest]) (*connect.Response[v1.ListBookResponse], error) {
-	return c.listBook.CallUnary(ctx, req)
+// ListBooks calls book.v1.BookService.ListBooks.
+func (c *bookServiceClient) ListBooks(ctx context.Context, req *connect.Request[v1.ListBooksRequest]) (*connect.Response[v1.ListBooksResponse], error) {
+	return c.listBooks.CallUnary(ctx, req)
 }
 
 // CreateBook calls book.v1.BookService.CreateBook.
@@ -216,9 +216,9 @@ func (c *bookServiceClient) GetAuthor(ctx context.Context, req *connect.Request[
 	return c.getAuthor.CallUnary(ctx, req)
 }
 
-// ListAuthor calls book.v1.BookService.ListAuthor.
-func (c *bookServiceClient) ListAuthor(ctx context.Context, req *connect.Request[v1.ListAuthorRequest]) (*connect.Response[v1.ListAuthorResponse], error) {
-	return c.listAuthor.CallUnary(ctx, req)
+// ListAuthors calls book.v1.BookService.ListAuthors.
+func (c *bookServiceClient) ListAuthors(ctx context.Context, req *connect.Request[v1.ListAuthorsRequest]) (*connect.Response[v1.ListAuthorsResponse], error) {
+	return c.listAuthors.CallUnary(ctx, req)
 }
 
 // CreateAuthor calls book.v1.BookService.CreateAuthor.
@@ -250,13 +250,13 @@ func (c *bookServiceClient) ThrowServiceError(ctx context.Context, req *connect.
 type BookServiceHandler interface {
 	// Book rpcs
 	GetBook(context.Context, *connect.Request[v1.GetBookRequest]) (*connect.Response[v1.GetBookResponse], error)
-	ListBook(context.Context, *connect.Request[v1.ListBookRequest]) (*connect.Response[v1.ListBookResponse], error)
+	ListBooks(context.Context, *connect.Request[v1.ListBooksRequest]) (*connect.Response[v1.ListBooksResponse], error)
 	CreateBook(context.Context, *connect.Request[v1.CreateBookRequest]) (*connect.Response[v1.CreateBookResponse], error)
 	UpdateBook(context.Context, *connect.Request[v1.UpdateBookRequest]) (*connect.Response[v1.UpdateBookResponse], error)
 	DeleteBook(context.Context, *connect.Request[v1.DeleteBookRequest]) (*connect.Response[v1.DeleteBookResponse], error)
 	// Authro rpcs
 	GetAuthor(context.Context, *connect.Request[v1.GetAuthorRequest]) (*connect.Response[v1.GetAuthorResponse], error)
-	ListAuthor(context.Context, *connect.Request[v1.ListAuthorRequest]) (*connect.Response[v1.ListAuthorResponse], error)
+	ListAuthors(context.Context, *connect.Request[v1.ListAuthorsRequest]) (*connect.Response[v1.ListAuthorsResponse], error)
 	CreateAuthor(context.Context, *connect.Request[v1.CreateAuthorRequest]) (*connect.Response[v1.CreateAuthorResponse], error)
 	UpdateAuthor(context.Context, *connect.Request[v1.UpdateAuthorRequest]) (*connect.Response[v1.UpdateAuthorResponse], error)
 	DeleteAuthor(context.Context, *connect.Request[v1.DeleteAuthorRequest]) (*connect.Response[v1.DeleteAuthorResponse], error)
@@ -278,10 +278,10 @@ func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(bookServiceMethods.ByName("GetBook")),
 		connect.WithHandlerOptions(opts...),
 	)
-	bookServiceListBookHandler := connect.NewUnaryHandler(
-		BookServiceListBookProcedure,
-		svc.ListBook,
-		connect.WithSchema(bookServiceMethods.ByName("ListBook")),
+	bookServiceListBooksHandler := connect.NewUnaryHandler(
+		BookServiceListBooksProcedure,
+		svc.ListBooks,
+		connect.WithSchema(bookServiceMethods.ByName("ListBooks")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceCreateBookHandler := connect.NewUnaryHandler(
@@ -308,10 +308,10 @@ func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(bookServiceMethods.ByName("GetAuthor")),
 		connect.WithHandlerOptions(opts...),
 	)
-	bookServiceListAuthorHandler := connect.NewUnaryHandler(
-		BookServiceListAuthorProcedure,
-		svc.ListAuthor,
-		connect.WithSchema(bookServiceMethods.ByName("ListAuthor")),
+	bookServiceListAuthorsHandler := connect.NewUnaryHandler(
+		BookServiceListAuthorsProcedure,
+		svc.ListAuthors,
+		connect.WithSchema(bookServiceMethods.ByName("ListAuthors")),
 		connect.WithHandlerOptions(opts...),
 	)
 	bookServiceCreateAuthorHandler := connect.NewUnaryHandler(
@@ -348,8 +348,8 @@ func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption
 		switch r.URL.Path {
 		case BookServiceGetBookProcedure:
 			bookServiceGetBookHandler.ServeHTTP(w, r)
-		case BookServiceListBookProcedure:
-			bookServiceListBookHandler.ServeHTTP(w, r)
+		case BookServiceListBooksProcedure:
+			bookServiceListBooksHandler.ServeHTTP(w, r)
 		case BookServiceCreateBookProcedure:
 			bookServiceCreateBookHandler.ServeHTTP(w, r)
 		case BookServiceUpdateBookProcedure:
@@ -358,8 +358,8 @@ func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption
 			bookServiceDeleteBookHandler.ServeHTTP(w, r)
 		case BookServiceGetAuthorProcedure:
 			bookServiceGetAuthorHandler.ServeHTTP(w, r)
-		case BookServiceListAuthorProcedure:
-			bookServiceListAuthorHandler.ServeHTTP(w, r)
+		case BookServiceListAuthorsProcedure:
+			bookServiceListAuthorsHandler.ServeHTTP(w, r)
 		case BookServiceCreateAuthorProcedure:
 			bookServiceCreateAuthorHandler.ServeHTTP(w, r)
 		case BookServiceUpdateAuthorProcedure:
@@ -383,8 +383,8 @@ func (UnimplementedBookServiceHandler) GetBook(context.Context, *connect.Request
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.GetBook is not implemented"))
 }
 
-func (UnimplementedBookServiceHandler) ListBook(context.Context, *connect.Request[v1.ListBookRequest]) (*connect.Response[v1.ListBookResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.ListBook is not implemented"))
+func (UnimplementedBookServiceHandler) ListBooks(context.Context, *connect.Request[v1.ListBooksRequest]) (*connect.Response[v1.ListBooksResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.ListBooks is not implemented"))
 }
 
 func (UnimplementedBookServiceHandler) CreateBook(context.Context, *connect.Request[v1.CreateBookRequest]) (*connect.Response[v1.CreateBookResponse], error) {
@@ -403,8 +403,8 @@ func (UnimplementedBookServiceHandler) GetAuthor(context.Context, *connect.Reque
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.GetAuthor is not implemented"))
 }
 
-func (UnimplementedBookServiceHandler) ListAuthor(context.Context, *connect.Request[v1.ListAuthorRequest]) (*connect.Response[v1.ListAuthorResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.ListAuthor is not implemented"))
+func (UnimplementedBookServiceHandler) ListAuthors(context.Context, *connect.Request[v1.ListAuthorsRequest]) (*connect.Response[v1.ListAuthorsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.ListAuthors is not implemented"))
 }
 
 func (UnimplementedBookServiceHandler) CreateAuthor(context.Context, *connect.Request[v1.CreateAuthorRequest]) (*connect.Response[v1.CreateAuthorResponse], error) {

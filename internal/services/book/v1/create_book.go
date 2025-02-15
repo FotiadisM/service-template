@@ -7,9 +7,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/encoder"
 	"github.com/FotiadisM/service-template/internal/services/book/v1/queries"
 )
 
@@ -24,26 +24,21 @@ func (s *Service) CreateBook(ctx context.Context, req *connect.Request[bookv1.Cr
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse author id %w", err)
 	}
-	book := queries.CreateBookParams{
-		ID:        id,
-		Title:     req.Msg.Title,
-		AuthorID:  authorID,
-		CreatedAt: now,
-		UpdatedAt: now,
+	createParams := queries.CreateBookParams{
+		ID:          id,
+		Title:       req.Msg.Title,
+		Description: req.Msg.Description,
+		AuthorID:    authorID,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
-	err = s.db.CreateBook(ctx, book)
+	book, err := s.db.CreateBook(ctx, createParams)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create author %w", err)
 	}
 
 	res := connect.NewResponse(&bookv1.CreateBookResponse{
-		Book: &bookv1.Book{
-			Id:        book.ID.String(),
-			Title:     book.Title,
-			AuthorId:  book.AuthorID.String(),
-			CreatedAt: timestamppb.New(book.CreatedAt),
-			UpdatedAt: timestamppb.New(book.UpdatedAt),
-		},
+		Book: encoder.DBBookToAPI(book),
 	})
 
 	return res, nil

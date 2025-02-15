@@ -7,34 +7,46 @@ package queries
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-const createAuthor = `-- name: CreateAuthor :exec
+const createAuthor = `-- name: CreateAuthor :one
 INSERT INTO authors (
-    id, name, created_at, updated_at
+    id, name, bio, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
+RETURNING id, name, bio, created_at, updated_at
 `
 
 type CreateAuthorParams struct {
 	ID        uuid.UUID
 	Name      string
+	Bio       string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) error {
-	_, err := q.db.ExecContext(ctx, createAuthor,
+func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (Author, error) {
+	row := q.db.QueryRowContext(ctx, createAuthor,
 		arg.ID,
 		arg.Name,
+		arg.Bio,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
-	return err
+	var i Author
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Bio,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const deleteAuthor = `-- name: DeleteAuthor :exec
@@ -48,7 +60,7 @@ func (q *Queries) DeleteAuthor(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAuthor = `-- name: GetAuthor :one
-SELECT id, name, created_at, updated_at FROM authors
+SELECT id, name, bio, created_at, updated_at FROM authors
 WHERE id = $1 LIMIT 1
 `
 
@@ -58,6 +70,7 @@ func (q *Queries) GetAuthor(ctx context.Context, id uuid.UUID) (Author, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Bio,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -65,7 +78,7 @@ func (q *Queries) GetAuthor(ctx context.Context, id uuid.UUID) (Author, error) {
 }
 
 const listAuthors = `-- name: ListAuthors :many
-SELECT id, name, created_at, updated_at FROM authors
+SELECT id, name, bio, created_at, updated_at FROM authors
 `
 
 func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
@@ -80,6 +93,7 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Bio,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -94,4 +108,39 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAuthor = `-- name: UpdateAuthor :one
+UPDATE authors
+SET
+    name = coalesce($2, name),
+    bio = coalesce($3, bio),
+    updated_at = $4
+WHERE id = $1
+RETURNING id, name, bio, created_at, updated_at
+`
+
+type UpdateAuthorParams struct {
+	ID        uuid.UUID
+	Name      sql.NullString
+	Bio       sql.NullString
+	UpdatedAt time.Time
+}
+
+func (q *Queries) UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) (Author, error) {
+	row := q.db.QueryRowContext(ctx, updateAuthor,
+		arg.ID,
+		arg.Name,
+		arg.Bio,
+		arg.UpdatedAt,
+	)
+	var i Author
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Bio,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

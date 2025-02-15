@@ -5,29 +5,23 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/encoder"
 )
 
-func (s *Service) ListBook(ctx context.Context, _ *connect.Request[bookv1.ListBookRequest]) (*connect.Response[bookv1.ListBookResponse], error) {
+func (s *Service) ListBooks(ctx context.Context, _ *connect.Request[bookv1.ListBooksRequest]) (*connect.Response[bookv1.ListBooksResponse], error) {
 	books, err := s.db.ListBooks(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list authors: %w", err)
 	}
 
 	resBooks := []*bookv1.Book{}
-	for _, a := range books {
-		resBooks = append(resBooks, &bookv1.Book{
-			Id:        a.ID.String(),
-			Title:     a.Title,
-			AuthorId:  a.AuthorID.String(),
-			CreatedAt: timestamppb.New(a.CreatedAt),
-			UpdatedAt: timestamppb.New(a.UpdatedAt),
-		})
+	for _, book := range books {
+		resBooks = append(resBooks, encoder.DBBookToAPI(book))
 	}
 
-	res := connect.NewResponse(&bookv1.ListBookResponse{
+	res := connect.NewResponse(&bookv1.ListBooksResponse{
 		Books: resBooks,
 	})
 

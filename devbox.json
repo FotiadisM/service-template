@@ -8,7 +8,6 @@
     "gofumpt@latest",
     "go-task@latest",
     "atlas@0.30.0",
-    "go-mockery@2.52.1",
     "sqlfluff@latest",
     "delve@1.24.0",
     "grpcui@latest",

@@ -2,6 +2,7 @@ CREATE TABLE books (
     id UUID NOT NULL,
     title TEXT NOT NULL,
     author_id UUID NOT NULL,
+    description TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 

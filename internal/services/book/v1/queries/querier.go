@@ -11,14 +11,16 @@ import (
 )
 
 type Querier interface {
-	CreateAuthor(ctx context.Context, arg CreateAuthorParams) error
-	CreateBook(ctx context.Context, arg CreateBookParams) error
+	CreateAuthor(ctx context.Context, arg CreateAuthorParams) (Author, error)
+	CreateBook(ctx context.Context, arg CreateBookParams) (Book, error)
 	DeleteAuthor(ctx context.Context, id uuid.UUID) error
 	DeleteBook(ctx context.Context, id uuid.UUID) error
 	GetAuthor(ctx context.Context, id uuid.UUID) (Author, error)
 	GetBook(ctx context.Context, id uuid.UUID) (Book, error)
 	ListAuthors(ctx context.Context) ([]Author, error)
 	ListBooks(ctx context.Context) ([]Book, error)
+	UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) (Author, error)
+	UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, error)
 }
 
 var _ Querier = (*Queries)(nil)

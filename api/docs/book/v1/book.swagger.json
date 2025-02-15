@@ -14,12 +14,12 @@
   "paths": {
     "/v1/authors": {
       "get": {
-        "operationId": "BookService_ListAuthor",
+        "operationId": "BookService_ListAuthors",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListAuthorResponse"
+              "$ref": "#/definitions/v1ListAuthorsResponse"
             }
           },
           "default": {
@@ -150,12 +150,12 @@
     },
     "/v1/books": {
       "get": {
-        "operationId": "BookService_ListBook",
+        "operationId": "BookService_ListBooks",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListBookResponse"
+              "$ref": "#/definitions/v1ListBooksResponse"
             }
           },
           "default": {
@@ -291,6 +291,9 @@
       "properties": {
         "name": {
           "type": "string"
+        },
+        "bio": {
+          "type": "string"
         }
       }
     },
@@ -300,7 +303,7 @@
         "title": {
           "type": "string"
         },
-        "authorId": {
+        "description": {
           "type": "string"
         }
       }
@@ -342,6 +345,9 @@
         "name": {
           "type": "string"
         },
+        "bio": {
+          "type": "string"
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -364,6 +370,9 @@
         "authorId": {
           "type": "string"
         },
+        "description": {
+          "type": "string"
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -378,6 +387,9 @@
       "type": "object",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "bio": {
           "type": "string"
         }
       }
@@ -397,6 +409,9 @@
           "type": "string"
         },
         "authorId": {
+          "type": "string"
+        },
+        "description": {
           "type": "string"
         }
       }
@@ -431,7 +446,7 @@
         }
       }
     },
-    "v1ListAuthorResponse": {
+    "v1ListAuthorsResponse": {
       "type": "object",
       "properties": {
         "authors": {
@@ -443,7 +458,7 @@
         }
       }
     },
-    "v1ListBookResponse": {
+    "v1ListBooksResponse": {
       "type": "object",
       "properties": {
         "books": {

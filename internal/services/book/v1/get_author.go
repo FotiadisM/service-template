@@ -7,11 +7,11 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/google/uuid"
 
 	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
+	"github.com/FotiadisM/service-template/internal/services/book/v1/encoder"
 )
 
 func (s *Service) GetAuthor(ctx context.Context, req *connect.Request[bookv1.GetAuthorRequest]) (*connect.Response[bookv1.GetAuthorResponse], error) {
@@ -29,12 +29,7 @@ func (s *Service) GetAuthor(ctx context.Context, req *connect.Request[bookv1.Get
 	}
 
 	res := connect.NewResponse(&bookv1.GetAuthorResponse{
-		Author: &bookv1.Author{
-			Id:        req.Msg.GetId(),
-			Name:      author.Name,
-			CreatedAt: timestamppb.New(author.CreatedAt),
-			UpdatedAt: timestamppb.New(author.UpdatedAt),
-		},
+		Author: encoder.DBAuthorToAPI(author),
 	})
 
 	return res, nil

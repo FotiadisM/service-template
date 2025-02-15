@@ -26,27 +26,29 @@ func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
 
 	authorID, err := uuid.NewV7()
 	require.NoError(t, err)
-	author := queries.CreateAuthorParams{
+	createAuthorParams := queries.CreateAuthorParams{
 		ID:        authorID,
 		Name:      "authro",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
-	err = s.Service.db.CreateAuthor(ctx, author)
+	_, err = s.Service.db.CreateAuthor(ctx, createAuthorParams)
 	require.NoError(t, err)
 
-	req := connect.NewRequest(&bookv1.CreateBookRequest{
-		Title:    "book_title",
-		AuthorId: authorID.String(),
-	})
-	res, err := s.Client.CreateBook(ctx, req)
+	bookReq := &bookv1.CreateBookRequest{
+		Title:       "book_title",
+		AuthorId:    authorID.String(),
+		Description: "book_description",
+	}
+	res, err := s.Client.CreateBook(ctx, connect.NewRequest(bookReq))
 	require.NoError(t, err)
 
 	require.NotEmpty(t, res.Msg.Book)
 	assert.NotEmpty(t, res.Msg.Book.Id)
-	assert.Equal(t, req.Msg.Title, res.Msg.Book.Title)
-	assert.Equal(t, req.Msg.AuthorId, res.Msg.Book.AuthorId)
+	assert.Equal(t, bookReq.Title, res.Msg.Book.Title)
+	assert.Equal(t, bookReq.AuthorId, res.Msg.Book.AuthorId)
+	assert.Equal(t, bookReq.Description, res.Msg.Book.Description)
 	assert.NotEmpty(t, res.Msg.Book.CreatedAt)
 	assert.NotEmpty(t, res.Msg.Book.UpdatedAt)
 
@@ -56,14 +58,25 @@ func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, book.ID.String(), res.Msg.Book.Id)
-	assert.Equal(t, book.Title, res.Msg.Book.Title)
-	assert.Equal(t, book.AuthorID.String(), res.Msg.Book.AuthorId)
+	assert.Equal(t, book.Title, bookReq.Title)
+	assert.Equal(t, book.AuthorID.String(), bookReq.AuthorId)
+	assert.Equal(t, book.Description, bookReq.Description)
 }
 
 func (s *UnitTestingSuite) TestCreateBookHTTP(t *testing.T) {
 	ctx := context.Background()
 
-	s.DB.EXPECT().CreateBook(mock.Anything, mock.Anything).Return(nil).Once()
+	s.DB.EXPECT().CreateBook(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, cbp queries.CreateBookParams) (queries.Book, error) {
+		book := queries.Book{
+			ID:          cbp.ID,
+			Title:       cbp.Title,
+			AuthorID:    cbp.AuthorID,
+			Description: cbp.Description,
+			CreatedAt:   cbp.CreatedAt,
+			UpdatedAt:   cbp.UpdatedAt,
+		}
+		return book, nil
+	})
 
 	req_buf := &bytes.Buffer{}
 	req_body := &bookv1.CreateBookRequest{
