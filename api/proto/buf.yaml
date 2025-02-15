@@ -1,6 +1,6 @@
 version: v2
 modules:
-  - name: buf.build/FotiadisM/service-template
+  - name: buf.build/fotiadism/service-template
 deps:
   - buf.build/googleapis/googleapis
   - buf.build/bufbuild/protovalidate
