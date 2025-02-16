@@ -20,7 +20,7 @@ import (
 )
 
 func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	bookReq := &bookv1.CreateBookRequest{
 		Title:       "book_title",

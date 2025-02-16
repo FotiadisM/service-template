@@ -19,7 +19,7 @@ import (
 )
 
 func (s *EndpointTestingSuite) TestCreateAuthor(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	authorReq := &bookv1.CreateAuthorRequest{
 		Name: "author_name",

@@ -1,7 +1,7 @@
 CREATE TABLE authors (
     id UUID NOT NULL,
     name TEXT NOT NULL,
-    bio TEXT NOT NULL,
+    bio TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
