@@ -80,8 +80,10 @@ type endpointTestingSuiteInternal struct {
 type EndpointTestingSuite struct {
 	_internal *endpointTestingSuiteInternal
 
-	Service    *Service
-	TestingDBs sync.Map
+	DBs      sync.Map
+	Fixtures *test.Fixtures
+
+	Service *Service
 
 	ServerURL string
 	HTTPClint *http.Client
@@ -118,8 +120,16 @@ func (s *EndpointTestingSuite) SetupSuite(t *testing.T) {
 	_, err = rootDB.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s", templateDBName))
 	require.NoError(t, err, "failed to create template database")
 
-	test.ApplyMigrations(ctx, t, strings.ReplaceAll(postgresConnURL, "test_db", templateDBName))
+	templateDBConnURL := strings.ReplaceAll(postgresConnURL, "test_db", templateDBName)
+	test.ApplyMigrations(ctx, t, templateDBConnURL)
 	s.Service = &Service{db: nil}
+
+	templateDB, err := sql.Open("pgx", templateDBConnURL)
+	require.NoError(t, err, "failed to open template DB connection")
+	s.Fixtures = test.NewFixtures(t)
+	s.Fixtures.Load(ctx, t, templateDB)
+	err = templateDB.Close()
+	require.NoError(t, err, "failed to close template DB connection")
 
 	config := test.NewConfig()
 	svcPath, svcHandler := bookv1connect.NewBookServiceHandler(
@@ -168,7 +178,7 @@ func (s *EndpointTestingSuite) SetupTest(t *testing.T) {
 
 	conn.SetMaxOpenConns(1)
 	conn.SetMaxIdleConns(1)
-	s.TestingDBs.Store(t.Name(), conn)
+	s.DBs.Store(t.Name(), conn)
 
 	db, err := database.NewFromDBConn(conn)
 	require.NoError(t, err, "failed to create db.DB")
@@ -179,7 +189,7 @@ func (s *EndpointTestingSuite) SetupTest(t *testing.T) {
 func (s *EndpointTestingSuite) TearDownTest(t *testing.T) {
 	t.Helper()
 
-	v, ok := s.TestingDBs.Load(t.Name())
+	v, ok := s.DBs.Load(t.Name())
 	if !ok {
 		t.Errorf("failed to load testing db for %s", t.Name())
 		return

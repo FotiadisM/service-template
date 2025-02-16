@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -24,21 +23,9 @@ func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	authorID, err := uuid.NewV7()
-	require.NoError(t, err)
-	createAuthorParams := queries.CreateAuthorParams{
-		ID:        authorID,
-		Name:      "authro",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	_, err = s.Service.db.CreateAuthor(ctx, createAuthorParams)
-	require.NoError(t, err)
-
 	bookReq := &bookv1.CreateBookRequest{
 		Title:       "book_title",
-		AuthorId:    authorID.String(),
+		AuthorId:    s.Fixtures.Author1.ID.String(),
 		Description: "book_description",
 	}
 	res, err := s.Client.CreateBook(ctx, connect.NewRequest(bookReq))
