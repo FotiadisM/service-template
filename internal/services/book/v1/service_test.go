@@ -202,7 +202,7 @@ func (s *EndpointTestingSuite) TearDownTest(t *testing.T) {
 
 	err := db.Close()
 	if err != nil {
-		t.Errorf("failed to close server: %v\n", err)
+		t.Errorf("failed to close test db connection: %v\n", err)
 	}
 }
 

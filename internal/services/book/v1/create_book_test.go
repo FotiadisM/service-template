@@ -20,7 +20,6 @@ import (
 )
 
 func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 
 	bookReq := &bookv1.CreateBookRequest{

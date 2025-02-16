@@ -19,7 +19,6 @@ import (
 )
 
 func (s *EndpointTestingSuite) TestCreateAuthor(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 
 	authorReq := &bookv1.CreateAuthorRequest{

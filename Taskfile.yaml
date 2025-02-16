@@ -1,6 +1,10 @@
 version: "3"
 
 tasks:
+  help:
+    desc: Display a summary of available tasks
+    cmd: task -l
+
   fmt:
     desc: Format code
     deps:
@@ -41,7 +45,9 @@ tasks:
 
   go:test:
     desc: Test Go code
-    cmd: gotestsum -- -race -cover ./...
+    vars:
+      ARGS: '{{.CLI_ARGS| default "./..."}}'
+    cmd: gotestsum -- -race -cover {{.ARGS}}
 
   go:test-watch:
     desc: Watch for file changes and run tests
