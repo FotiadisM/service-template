@@ -3,7 +3,7 @@ module github.com/FotiadisM/service-template
 go 1.24
 
 require (
-	ariga.io/atlas-go-sdk v0.6.5
+	ariga.io/atlas-go-sdk v0.6.6
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.5-20250130201111-63bb56e20495.1
 	connectrpc.com/connect v1.18.1
 	connectrpc.com/grpchealth v1.3.0
