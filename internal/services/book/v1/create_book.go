@@ -3,7 +3,6 @@ package bookv1
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -19,7 +18,6 @@ func (s *Service) CreateBook(ctx context.Context, req *connect.Request[bookv1.Cr
 		return nil, fmt.Errorf("failed to create uuid %w", err)
 	}
 
-	now := time.Now()
 	authorID, err := uuid.Parse(req.Msg.AuthorId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse author id %w", err)
@@ -29,8 +27,6 @@ func (s *Service) CreateBook(ctx context.Context, req *connect.Request[bookv1.Cr
 		Title:       req.Msg.Title,
 		Description: req.Msg.Description,
 		AuthorID:    authorID,
-		CreatedAt:   now,
-		UpdatedAt:   now,
 	}
 	book, err := s.db.CreateBook(ctx, createParams)
 	if err != nil {

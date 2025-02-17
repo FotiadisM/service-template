@@ -94,11 +94,9 @@ func NewFixtures(t *testing.T) *Fixtures {
 
 func authorToCreateParams(author queries.Author) queries.CreateAuthorParams {
 	return queries.CreateAuthorParams{
-		ID:        author.ID,
-		Name:      author.Name,
-		Bio:       author.Bio,
-		CreatedAt: author.CreatedAt,
-		UpdatedAt: author.UpdatedAt,
+		ID:   author.ID,
+		Name: author.Name,
+		Bio:  author.Bio,
 	}
 }
 
@@ -108,8 +106,6 @@ func bookToCreateParams(book queries.Book) queries.CreateBookParams {
 		Title:       book.Title,
 		AuthorID:    book.AuthorID,
 		Description: book.Description,
-		CreatedAt:   book.CreatedAt,
-		UpdatedAt:   book.UpdatedAt,
 	}
 }
 

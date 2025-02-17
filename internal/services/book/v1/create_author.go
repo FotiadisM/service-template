@@ -3,7 +3,6 @@ package bookv1
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"connectrpc.com/connect"
 
@@ -20,13 +19,10 @@ func (s *Service) CreateAuthor(ctx context.Context, req *connect.Request[bookv1.
 		return nil, fmt.Errorf("failed to create uuid %w", err)
 	}
 
-	now := time.Now().UTC()
 	createParams := queries.CreateAuthorParams{
-		ID:        id,
-		Name:      req.Msg.Name,
-		Bio:       req.Msg.Bio,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:   id,
+		Name: req.Msg.Name,
+		Bio:  req.Msg.Bio,
 	}
 	author, err := s.db.CreateAuthor(ctx, createParams)
 	if err != nil {

@@ -7,9 +7,9 @@ SELECT * FROM authors;
 
 -- name: CreateAuthor :one
 INSERT INTO authors (
-    id, name, bio, created_at, updated_at
+    id, name, bio
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3
 )
 RETURNING *;
 

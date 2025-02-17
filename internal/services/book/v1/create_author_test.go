@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -46,15 +47,16 @@ func (s *EndpointTestingSuite) TestCreateAuthor(t *testing.T) {
 }
 
 func (s *UnitTestingSuite) TestCreateAuthorHTTP(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
-	s.DB.EXPECT().CreateAuthor(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, cap queries.CreateAuthorParams) (queries.Author, error) {
+	s.DB.EXPECT().CreateAuthor(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, in queries.CreateAuthorParams) (queries.Author, error) {
+		now := time.Now()
 		author := queries.Author{
-			ID:        cap.ID,
-			Name:      cap.Name,
-			Bio:       cap.Bio,
-			CreatedAt: cap.CreatedAt,
-			UpdatedAt: cap.UpdatedAt,
+			ID:        in.ID,
+			Name:      in.Name,
+			Bio:       in.Bio,
+			CreatedAt: now,
+			UpdatedAt: now,
 		}
 		return author, nil
 	}).Once()
@@ -86,7 +88,7 @@ func (s *UnitTestingSuite) TestCreateAuthorHTTP(t *testing.T) {
 }
 
 func (s *UnitTestingSuite) TestCreateAuthorValidation(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	req := connect.NewRequest(&bookv1.CreateAuthorRequest{
 		Name: "",

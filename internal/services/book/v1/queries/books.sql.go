@@ -15,9 +15,9 @@ import (
 
 const createBook = `-- name: CreateBook :one
 INSERT INTO books (
-    id, title, author_id, description, created_at, updated_at
+    id, title, author_id, description
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4
 )
 RETURNING id, title, author_id, description, created_at, updated_at
 `
@@ -27,8 +27,6 @@ type CreateBookParams struct {
 	Title       string
 	AuthorID    uuid.UUID
 	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
 }
 
 func (q *Queries) CreateBook(ctx context.Context, arg CreateBookParams) (Book, error) {
@@ -37,8 +35,6 @@ func (q *Queries) CreateBook(ctx context.Context, arg CreateBookParams) (Book, e
 		arg.Title,
 		arg.AuthorID,
 		arg.Description,
-		arg.CreatedAt,
-		arg.UpdatedAt,
 	)
 	var i Book
 	err := row.Scan(

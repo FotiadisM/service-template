@@ -15,29 +15,21 @@ import (
 
 const createAuthor = `-- name: CreateAuthor :one
 INSERT INTO authors (
-    id, name, bio, created_at, updated_at
+    id, name, bio
 ) VALUES (
-    $1, $2, $3, $4, $5
+    $1, $2, $3
 )
 RETURNING id, name, bio, created_at, updated_at
 `
 
 type CreateAuthorParams struct {
-	ID        uuid.UUID
-	Name      string
-	Bio       string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID   uuid.UUID
+	Name string
+	Bio  string
 }
 
 func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (Author, error) {
-	row := q.db.QueryRowContext(ctx, createAuthor,
-		arg.ID,
-		arg.Name,
-		arg.Bio,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
+	row := q.db.QueryRowContext(ctx, createAuthor, arg.ID, arg.Name, arg.Bio)
 	var i Author
 	err := row.Scan(
 		&i.ID,

@@ -50,16 +50,14 @@ func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
 }
 
 func (s *UnitTestingSuite) TestCreateBookHTTP(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
-	s.DB.EXPECT().CreateBook(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, cbp queries.CreateBookParams) (queries.Book, error) {
+	s.DB.EXPECT().CreateBook(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, in queries.CreateBookParams) (queries.Book, error) {
 		book := queries.Book{
-			ID:          cbp.ID,
-			Title:       cbp.Title,
-			AuthorID:    cbp.AuthorID,
-			Description: cbp.Description,
-			CreatedAt:   cbp.CreatedAt,
-			UpdatedAt:   cbp.UpdatedAt,
+			ID:          in.ID,
+			Title:       in.Title,
+			AuthorID:    in.AuthorID,
+			Description: in.Description,
 		}
 		return book, nil
 	})
@@ -92,7 +90,7 @@ func (s *UnitTestingSuite) TestCreateBookHTTP(t *testing.T) {
 }
 
 func (s *UnitTestingSuite) TestCreateBookValidation(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	tests := []struct {
 		req *bookv1.CreateBookRequest
