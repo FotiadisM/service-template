@@ -26,3 +26,12 @@ type Book struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+type BookReview struct {
+	ID        uuid.UUID
+	BookID    uuid.UUID
+	Rating    int32
+	Text      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}

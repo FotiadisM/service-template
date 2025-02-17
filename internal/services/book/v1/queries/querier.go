@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	CreateAuthor(ctx context.Context, arg CreateAuthorParams) (Author, error)
 	CreateBook(ctx context.Context, arg CreateBookParams) (Book, error)
+	CreateBookReview(ctx context.Context, arg CreateBookReviewParams) (BookReview, error)
 	DeleteAuthor(ctx context.Context, id uuid.UUID) error
 	DeleteBook(ctx context.Context, id uuid.UUID) error
 	GetAuthor(ctx context.Context, id uuid.UUID) (Author, error)

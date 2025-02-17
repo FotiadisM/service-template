@@ -196,6 +196,42 @@
         "tags": ["BookService"]
       }
     },
+    "/v1/books/{bookId}/reviews": {
+      "post": {
+        "operationId": "BookService_CreateBookReview",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateBookReviewResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BookServiceCreateBookReviewBody"
+            }
+          }
+        ],
+        "tags": ["BookService"]
+      }
+    },
     "/v1/books/{id}": {
       "get": {
         "operationId": "BookService_GetBook",
@@ -286,6 +322,18 @@
     }
   },
   "definitions": {
+    "BookServiceCreateBookReviewBody": {
+      "type": "object",
+      "properties": {
+        "rating": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
     "BookServiceUpdateAuthorBody": {
       "type": "object",
       "properties": {
@@ -383,6 +431,32 @@
         }
       }
     },
+    "v1BookReview": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bookId": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "text": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "v1CreateAuthorRequest": {
       "type": "object",
       "properties": {
@@ -421,6 +495,14 @@
       "properties": {
         "book": {
           "$ref": "#/definitions/v1Book"
+        }
+      }
+    },
+    "v1CreateBookReviewResponse": {
+      "type": "object",
+      "properties": {
+        "review": {
+          "$ref": "#/definitions/v1BookReview"
         }
       }
     },

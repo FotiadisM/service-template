@@ -106,6 +106,28 @@ message DeleteBookRequest {
 }
 message DeleteBookResponse {}
 
+// Review rpcs
+
+message BookReview {
+  string id = 1;
+  string book_id = 2;
+  int32 rating = 3;
+  string text = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateBookReviewRequest {
+  string book_id = 1 [(buf.validate.field).string.uuid = true];
+  int32 rating = 2 [
+    (buf.validate.field).int32.gte = 0,
+    (buf.validate.field).int32.lte = 5
+  ];
+  string text = 3;
+}
+message CreateBookReviewResponse {
+  BookReview review = 1;
+}
 // Example rpcs
 
 message ThrowPanicRequest {}
@@ -159,6 +181,14 @@ service BookService {
   }
   rpc DeleteBook(DeleteBookRequest) returns (DeleteBookResponse) {
     option (google.api.http) = {delete: "/v1/books/{id}"};
+  }
+
+  // Review rpc
+  rpc CreateBookReview(CreateBookReviewRequest) returns (CreateBookReviewResponse) {
+    option (google.api.http) = {
+      post: "/v1/books/{book_id}/reviews"
+      body: "*"
+    };
   }
 
   // Exampl rpcs

@@ -26,6 +26,7 @@ func main() {
 
 	ctx := context.Background()
 	config := config.NewConfig(ctx)
+	config.Inst.OtelSDKDisabled = false
 
 	log := ilog.NewLogger(
 		ilog.WithLogLevel(slog.Level(config.Logging.Level)),

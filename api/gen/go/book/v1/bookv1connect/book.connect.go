@@ -58,6 +58,9 @@ const (
 	BookServiceUpdateBookProcedure = "/book.v1.BookService/UpdateBook"
 	// BookServiceDeleteBookProcedure is the fully-qualified name of the BookService's DeleteBook RPC.
 	BookServiceDeleteBookProcedure = "/book.v1.BookService/DeleteBook"
+	// BookServiceCreateBookReviewProcedure is the fully-qualified name of the BookService's
+	// CreateBookReview RPC.
+	BookServiceCreateBookReviewProcedure = "/book.v1.BookService/CreateBookReview"
 	// BookServiceThrowPanicProcedure is the fully-qualified name of the BookService's ThrowPanic RPC.
 	BookServiceThrowPanicProcedure = "/book.v1.BookService/ThrowPanic"
 	// BookServiceThrowServiceErrorProcedure is the fully-qualified name of the BookService's
@@ -79,6 +82,8 @@ type BookServiceClient interface {
 	CreateBook(context.Context, *connect.Request[v1.CreateBookRequest]) (*connect.Response[v1.CreateBookResponse], error)
 	UpdateBook(context.Context, *connect.Request[v1.UpdateBookRequest]) (*connect.Response[v1.UpdateBookResponse], error)
 	DeleteBook(context.Context, *connect.Request[v1.DeleteBookRequest]) (*connect.Response[v1.DeleteBookResponse], error)
+	// Review rpc
+	CreateBookReview(context.Context, *connect.Request[v1.CreateBookReviewRequest]) (*connect.Response[v1.CreateBookReviewResponse], error)
 	// Exampl rpcs
 	ThrowPanic(context.Context, *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error)
 	ThrowServiceError(context.Context, *connect.Request[v1.ThrowServiceErrorRequest]) (*connect.Response[v1.ThrowServiceErrorResponse], error)
@@ -155,6 +160,12 @@ func NewBookServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(bookServiceMethods.ByName("DeleteBook")),
 			connect.WithClientOptions(opts...),
 		),
+		createBookReview: connect.NewClient[v1.CreateBookReviewRequest, v1.CreateBookReviewResponse](
+			httpClient,
+			baseURL+BookServiceCreateBookReviewProcedure,
+			connect.WithSchema(bookServiceMethods.ByName("CreateBookReview")),
+			connect.WithClientOptions(opts...),
+		),
 		throwPanic: connect.NewClient[v1.ThrowPanicRequest, v1.ThrowPanicResponse](
 			httpClient,
 			baseURL+BookServiceThrowPanicProcedure,
@@ -182,6 +193,7 @@ type bookServiceClient struct {
 	createBook        *connect.Client[v1.CreateBookRequest, v1.CreateBookResponse]
 	updateBook        *connect.Client[v1.UpdateBookRequest, v1.UpdateBookResponse]
 	deleteBook        *connect.Client[v1.DeleteBookRequest, v1.DeleteBookResponse]
+	createBookReview  *connect.Client[v1.CreateBookReviewRequest, v1.CreateBookReviewResponse]
 	throwPanic        *connect.Client[v1.ThrowPanicRequest, v1.ThrowPanicResponse]
 	throwServiceError *connect.Client[v1.ThrowServiceErrorRequest, v1.ThrowServiceErrorResponse]
 }
@@ -236,6 +248,11 @@ func (c *bookServiceClient) DeleteBook(ctx context.Context, req *connect.Request
 	return c.deleteBook.CallUnary(ctx, req)
 }
 
+// CreateBookReview calls book.v1.BookService.CreateBookReview.
+func (c *bookServiceClient) CreateBookReview(ctx context.Context, req *connect.Request[v1.CreateBookReviewRequest]) (*connect.Response[v1.CreateBookReviewResponse], error) {
+	return c.createBookReview.CallUnary(ctx, req)
+}
+
 // ThrowPanic calls book.v1.BookService.ThrowPanic.
 func (c *bookServiceClient) ThrowPanic(ctx context.Context, req *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error) {
 	return c.throwPanic.CallUnary(ctx, req)
@@ -260,6 +277,8 @@ type BookServiceHandler interface {
 	CreateBook(context.Context, *connect.Request[v1.CreateBookRequest]) (*connect.Response[v1.CreateBookResponse], error)
 	UpdateBook(context.Context, *connect.Request[v1.UpdateBookRequest]) (*connect.Response[v1.UpdateBookResponse], error)
 	DeleteBook(context.Context, *connect.Request[v1.DeleteBookRequest]) (*connect.Response[v1.DeleteBookResponse], error)
+	// Review rpc
+	CreateBookReview(context.Context, *connect.Request[v1.CreateBookReviewRequest]) (*connect.Response[v1.CreateBookReviewResponse], error)
 	// Exampl rpcs
 	ThrowPanic(context.Context, *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error)
 	ThrowServiceError(context.Context, *connect.Request[v1.ThrowServiceErrorRequest]) (*connect.Response[v1.ThrowServiceErrorResponse], error)
@@ -332,6 +351,12 @@ func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(bookServiceMethods.ByName("DeleteBook")),
 		connect.WithHandlerOptions(opts...),
 	)
+	bookServiceCreateBookReviewHandler := connect.NewUnaryHandler(
+		BookServiceCreateBookReviewProcedure,
+		svc.CreateBookReview,
+		connect.WithSchema(bookServiceMethods.ByName("CreateBookReview")),
+		connect.WithHandlerOptions(opts...),
+	)
 	bookServiceThrowPanicHandler := connect.NewUnaryHandler(
 		BookServiceThrowPanicProcedure,
 		svc.ThrowPanic,
@@ -366,6 +391,8 @@ func NewBookServiceHandler(svc BookServiceHandler, opts ...connect.HandlerOption
 			bookServiceUpdateBookHandler.ServeHTTP(w, r)
 		case BookServiceDeleteBookProcedure:
 			bookServiceDeleteBookHandler.ServeHTTP(w, r)
+		case BookServiceCreateBookReviewProcedure:
+			bookServiceCreateBookReviewHandler.ServeHTTP(w, r)
 		case BookServiceThrowPanicProcedure:
 			bookServiceThrowPanicHandler.ServeHTTP(w, r)
 		case BookServiceThrowServiceErrorProcedure:
@@ -417,6 +444,10 @@ func (UnimplementedBookServiceHandler) UpdateBook(context.Context, *connect.Requ
 
 func (UnimplementedBookServiceHandler) DeleteBook(context.Context, *connect.Request[v1.DeleteBookRequest]) (*connect.Response[v1.DeleteBookResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.DeleteBook is not implemented"))
+}
+
+func (UnimplementedBookServiceHandler) CreateBookReview(context.Context, *connect.Request[v1.CreateBookReviewRequest]) (*connect.Response[v1.CreateBookReviewResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("book.v1.BookService.CreateBookReview is not implemented"))
 }
 
 func (UnimplementedBookServiceHandler) ThrowPanic(context.Context, *connect.Request[v1.ThrowPanicRequest]) (*connect.Response[v1.ThrowPanicResponse], error) {
