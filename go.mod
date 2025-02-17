@@ -11,7 +11,7 @@ require (
 	connectrpc.com/otelconnect v0.7.1
 	connectrpc.com/vanguard v0.3.0
 	github.com/XSAM/otelsql v0.36.0
-	github.com/bufbuild/protovalidate-go v0.9.1
+	github.com/bufbuild/protovalidate-go v0.9.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/lmittmann/tint v1.0.7
