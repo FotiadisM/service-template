@@ -75,7 +75,6 @@ tasks:
     cmds:
       - atlas schema fmt
       - sqlfluff format -d postgres --disable-progress-bar
-      - task: sql:migrations:hash
 
   sql:lint:
     desc: Lint sql code
@@ -84,9 +83,9 @@ tasks:
   sql:gen:
     desc: Generate DB schema structs and queries
     cmds:
+      - task: sql:fmt
       - sqlc generate
       - task: mocks:gen
-      - task: sql:fmt
 
   sql:migrations:new:emtpy:
     desc: Create a new empty migration file
@@ -97,11 +96,14 @@ tasks:
     desc: Create a new migration file based on the schema diff
     aliases: [sql-new]
     cmds:
+      - task: sql:fmt
       - for: ["postgres", "postgres-dev"]
         task: sql:db:reset
         vars:
           CONTAINER: "{{.ITEM}}"
       - atlas migrate diff --env local {{.CLI_ARGS}}
+      - task: sql:fmt
+      - task: sql:migrations:hash
 
   sql:migrations:apply:
     desc: Apply the migrations to the database
