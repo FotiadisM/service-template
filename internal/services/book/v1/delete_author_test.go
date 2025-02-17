@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	bookv1 "github.com/FotiadisM/service-template/api/gen/go/book/v1"
 )
 
 func (s *EndpointTestingSuite) TestDeleteAuthor(t *testing.T) {

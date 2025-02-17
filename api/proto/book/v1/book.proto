@@ -16,15 +16,6 @@ message ErrorResponse {
   Error error = 1;
 }
 
-message Book {
-  string id = 1;
-  string title = 2;
-  string author_id = 3;
-  string description = 4;
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
-}
-
 message Author {
   string id = 1;
   string name = 2;
@@ -32,43 +23,6 @@ message Author {
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
 }
-
-// Book rpcs
-
-message GetBookRequest {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-}
-message GetBookResponse {
-  Book book = 1;
-}
-
-message ListBooksRequest {}
-message ListBooksResponse {
-  repeated Book books = 1;
-}
-
-message CreateBookRequest {
-  string title = 1 [(buf.validate.field).required = true];
-  string author_id = 2 [(buf.validate.field).string.uuid = true];
-  string description = 3;
-}
-message CreateBookResponse {
-  Book book = 1;
-}
-
-message UpdateBookRequest {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  optional string title = 2;
-  optional string description = 3;
-}
-message UpdateBookResponse {
-  Book book = 1;
-}
-
-message DeleteBookRequest {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-}
-message DeleteBookResponse {}
 
 // Author rpcs
 
@@ -106,6 +60,52 @@ message DeleteAuthorRequest {
 }
 message DeleteAuthorResponse {}
 
+// Book rpcs
+
+message Book {
+  string id = 1;
+  string title = 2;
+  string author_id = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message GetBookRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message GetBookResponse {
+  Book book = 1;
+}
+
+message ListBooksRequest {}
+message ListBooksResponse {
+  repeated Book books = 1;
+}
+
+message CreateBookRequest {
+  string title = 1 [(buf.validate.field).required = true];
+  string author_id = 2 [(buf.validate.field).string.uuid = true];
+  string description = 3;
+}
+message CreateBookResponse {
+  Book book = 1;
+}
+
+message UpdateBookRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  optional string title = 2;
+  optional string description = 3;
+}
+message UpdateBookResponse {
+  Book book = 1;
+}
+
+message DeleteBookRequest {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+message DeleteBookResponse {}
+
 // Example rpcs
 
 message ThrowPanicRequest {}
@@ -115,6 +115,29 @@ message ThrowServiceErrorRequest {}
 message ThrowServiceErrorResponse {}
 
 service BookService {
+  // Author rpcs
+  rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse) {
+    option (google.api.http) = {get: "/v1/authors/{id}"};
+  }
+  rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
+    option (google.api.http) = {get: "/v1/authors"};
+  }
+  rpc CreateAuthor(CreateAuthorRequest) returns (CreateAuthorResponse) {
+    option (google.api.http) = {
+      post: "/v1/authors"
+      body: "*"
+    };
+  }
+  rpc UpdateAuthor(UpdateAuthorRequest) returns (UpdateAuthorResponse) {
+    option (google.api.http) = {
+      patch: "/v1/authors/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteAuthor(DeleteAuthorRequest) returns (DeleteAuthorResponse) {
+    option (google.api.http) = {delete: "/v1/authors/{id}"};
+  }
+
   // Book rpcs
   rpc GetBook(GetBookRequest) returns (GetBookResponse) {
     option (google.api.http) = {get: "/v1/books/{id}"};
@@ -136,29 +159,6 @@ service BookService {
   }
   rpc DeleteBook(DeleteBookRequest) returns (DeleteBookResponse) {
     option (google.api.http) = {delete: "/v1/books/{id}"};
-  }
-
-  // Authro rpcs
-  rpc GetAuthor(GetAuthorRequest) returns (GetAuthorResponse) {
-    option (google.api.http) = {get: "/v1/authors/{id}"};
-  }
-  rpc ListAuthors(ListAuthorsRequest) returns (ListAuthorsResponse) {
-    option (google.api.http) = {get: "/v1/authors"};
-  }
-  rpc CreateAuthor(CreateAuthorRequest) returns (CreateAuthorResponse) {
-    option (google.api.http) = {
-      post: "/v1/authors"
-      body: "*"
-    };
-  }
-  rpc UpdateAuthor(UpdateAuthorRequest) returns (UpdateAuthorResponse) {
-    option (google.api.http) = {
-      patch: "/v1/authors/{id}"
-      body: "*"
-    };
-  }
-  rpc DeleteAuthor(DeleteAuthorRequest) returns (DeleteAuthorResponse) {
-    option (google.api.http) = {delete: "/v1/authors/{id}"};
   }
 
   // Exampl rpcs
