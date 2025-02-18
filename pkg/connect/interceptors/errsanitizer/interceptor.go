@@ -36,12 +36,5 @@ func (i *Interceptor) WrapStreamingClient(next connect.StreamingClientFunc) conn
 }
 
 func (i *Interceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
-	return func(ctx context.Context, conn connect.StreamingHandlerConn) (err error) {
-		err = next(ctx, conn)
-		if err != nil {
-			return i.snFunc(err)
-		}
-
-		return nil
-	}
+	return next
 }
