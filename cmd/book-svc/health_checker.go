@@ -24,11 +24,11 @@ func (c *healthChecker) Check(ctx context.Context, req *grpchealth.CheckRequest)
 	}
 
 	if req.Service == "readiness" {
-		return &grpchealth.CheckResponse{Status: grpchealth.StatusServing}, nil
+		return c.readiness(ctx)
 	}
 
 	if req.Service == "liveness" {
-		return c.livenessProbe(ctx)
+		return &grpchealth.CheckResponse{Status: grpchealth.StatusServing}, nil
 	}
 
 	err := connect.NewError(
@@ -39,7 +39,7 @@ func (c *healthChecker) Check(ctx context.Context, req *grpchealth.CheckRequest)
 	return nil, err
 }
 
-func (c *healthChecker) livenessProbe(ctx context.Context) (*grpchealth.CheckResponse, error) {
+func (c *healthChecker) readiness(ctx context.Context) (*grpchealth.CheckResponse, error) {
 	err := c.DB.PingContext(ctx)
 	if err != nil {
 		return &grpchealth.CheckResponse{Status: grpchealth.StatusNotServing}, nil //nolint
