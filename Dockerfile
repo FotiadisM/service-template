@@ -11,7 +11,7 @@ RUN go build -o app ./cmd/book-svc
 
 FROM alpine:3.21
 RUN apk add --no-cache ca-certificates
-COPY --from=build --chown=1001:1001 app .
+COPY --from=build --chown=1001:1001 /app/app .
 
 USER 1001:1001
 
