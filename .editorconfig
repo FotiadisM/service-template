@@ -12,3 +12,7 @@ indent_style = tab
 [*.md, *.proto, *.json, *.yml, *.yaml]
 indent_size = 2
 indent_style = space
+
+[Tiltfile]
+indent_size = 4
+indent_style = space

@@ -1,5 +1,0 @@
-otlp:
-  promote_resource_attributes:
-    - service.name
-    - service.instance.id
-    - service.namespace

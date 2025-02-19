@@ -16,6 +16,5 @@ COPY --from=build --chown=1001:1001 /app/app .
 USER 1001:1001
 
 EXPOSE 8080
-EXPOSE 9090
 
 ENTRYPOINT ["./app"]

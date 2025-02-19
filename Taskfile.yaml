@@ -5,6 +5,15 @@ tasks:
     desc: Display a summary of available tasks
     cmd: task -l
 
+  build:
+    desc: Build the application
+    env:
+      GOOS: linux
+      CGO_ENABLED: 0
+    cmds:
+      - mkdir -p bin
+      - go build -o ./bin/app ./cmd/book-svc
+
   fmt:
     desc: Format code
     deps:
@@ -125,8 +134,10 @@ tasks:
     internal: true
     desc: Drop and re-create the database
     cmds:
-      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "DROP DATABASE IF EXISTS $PSQL_DBNAME;"
-      - docker-compose exec {{.CONTAINER}} psql -q -U postgres -c "CREATE DATABASE $PSQL_DBNAME;"
+      - tilt disable service-template
+      - kubectl exec -it statefulsets/{{.CONTAINER}} -- psql -q -U postgres -c "DROP DATABASE IF EXISTS $PSQL_DBNAME;"
+      - kubectl exec -it statefulsets/{{.CONTAINER}} -- psql -q -U postgres -c "CREATE DATABASE $PSQL_DBNAME;"
+      - tilt enable service-template
 
   mocks:gen:
     desc: Generate mocks

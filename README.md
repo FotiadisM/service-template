@@ -35,4 +35,4 @@ devbox shell
 
 ## Optional TODO
 
-- [ ] Integrate some kubernetes development tool
+- [x] Integrate some kubernetes development tool
