@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: prometheus
 spec:
+  clusterIP: None
   selector:
     app.kubernetes.io/name: prometheus
   ports:
@@ -13,7 +14,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus
+  name: prometheus-config
   labels:
     app.kubernetes.io/name: prometheus
 data:
@@ -25,13 +26,14 @@ data:
         - service.namespace
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: prometheus
   labels:
     app.kubernetes.io/name: prometheus
 spec:
   replicas: 1
+  serviceName: prometheus
   selector:
     matchLabels:
       app.kubernetes.io/name: prometheus
@@ -54,9 +56,23 @@ spec:
               path: /-/healthy
             initialDelaySeconds: 5
           volumeMounts:
-            - name: prometheus
+            - name: prometheus-config
               mountPath: /etc/prometheus/
+            - name: prometheus
+              mountPath: /prometheus
       volumes:
-        - name: prometheus
+        - name: prometheus-config
           configMap:
-            name: prometheus
+            name: prometheus-config
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: prometheus
+        labels:
+          app.kubernetes.io/name: prometheus
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

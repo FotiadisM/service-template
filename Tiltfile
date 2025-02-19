@@ -49,4 +49,4 @@ k8s_yaml("./.tilt/k8s/otel/otel-collector.yaml")
 k8s_resource("otel-collector", objects=["otel-collector:configmap"])
 
 k8s_yaml("./.tilt/k8s/otel/prometheus.yaml")
-k8s_resource("prometheus", objects=["prometheus:configmap"], port_forwards="9090")
+k8s_resource("prometheus", objects=["prometheus-config:configmap"], port_forwards="9090")

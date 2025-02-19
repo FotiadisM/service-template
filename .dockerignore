@@ -1,10 +1,10 @@
 .git
 .devbox
 .github
+.tilt
 
 api/proto
-otel
-swagger
+# bin
 
 .dockerignore
 .editorconfig
@@ -22,3 +22,4 @@ local.env
 README.md
 sqlc.yaml
 Taskfile.yaml
+Tiltfile
