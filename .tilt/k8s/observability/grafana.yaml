@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: grafana
+  labels:
+    app.kubernetes.io/name: grafana
 spec:
   selector:
     app.kubernetes.io/name: grafana
@@ -9,6 +11,28 @@ spec:
     - port: 3000
       targetPort: 3000
       protocol: TCP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  labels:
+    app.kubernetes.io/name: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Tempo
+        type: tempo
+        uid: EbPG8fYoz
+        url: http://tempo:3200
+        access: proxy
+        basicAuth: false
+        jsonData:
+          nodeGraph:
+            enabled: true
+          streamingEnabled:
+            search: true
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -42,6 +66,12 @@ spec:
           volumeMounts:
             - name: grafana
               mountPath: /var/lib/grafana
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources/
+      volumes:
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
   volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim

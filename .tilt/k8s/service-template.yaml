@@ -10,6 +10,19 @@ spec:
       targetPort: 8080
       protocol: TCP
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-template-grpc
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: service-template
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,9 +64,9 @@ spec:
             - name: OTEL_SERVICE_NAME
               value: book-svc
             - name: OTEL_EXPORTER_ADDR
-              value: otel-collector:4317
+              value: otel-collector-grpc:4317
             - name: OTEL_SDK_DISABLED
-              value: "true"
+              value: "false"
           livenessProbe:
             grpc:
               port: 8080
