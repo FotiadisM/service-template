@@ -24,7 +24,7 @@ data:
     datasources:
       - name: Tempo
         type: tempo
-        uid: EbPG8fYoz
+        uid: 1
         url: http://tempo:3200
         access: proxy
         basicAuth: false
@@ -63,6 +63,16 @@ spec:
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
               value: Admin
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
           volumeMounts:
             - name: grafana
               mountPath: /var/lib/grafana
