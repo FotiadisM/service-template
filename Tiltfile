@@ -20,10 +20,10 @@ def deploy_dependencies():
     k8s_resource("redis", labels="dependencies")
 
     k8s_yaml("./.tilt/k8s/postgres.yaml")
-    k8s_resource("postgres", port_forwards="5432", labels="dependencies")
+    k8s_resource("postgres", objects=["postgres-init:configmap"], port_forwards="5432", labels="dependencies")
 
     k8s_yaml("./.tilt/k8s/postgres-dev.yaml")
-    k8s_resource("postgres-dev", port_forwards="5433:5432", labels="dependencies")
+    k8s_resource("postgres-dev", objects=["postgres-dev-init:configmap"], port_forwards="5433:5432", labels="dependencies")
 
 def deploy_service_and_helpers():
     local_resource(

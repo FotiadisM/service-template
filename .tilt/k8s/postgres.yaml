@@ -13,6 +13,35 @@ spec:
       targetPort: 5432
       protocol: TCP
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  labels:
+    app.kubernetes.io/name: postgres
+data:
+  init-dbs.sh: |
+    #!/bin/bash
+
+    set -eu
+
+    function create_user_and_database() {
+      local database=$1
+      echo "  Creating '$database'"
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+          CREATE DATABASE $database;
+          GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
+    EOSQL
+    }
+
+    if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
+      echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
+      for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
+        create_user_and_database $db
+      done
+      echo "Multiple databases created"
+    fi
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -41,14 +70,22 @@ spec:
             - name: POSTGRES_PASSWORD
               value: postgres
             - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_MULTIPLE_DATABASES
               value: book_svc
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "postgres", "-d", "book_svc"]
+              command: ["pg_isready", "-U", "postgres", "-d", "postgres"]
             initialDelaySeconds: 5
           volumeMounts:
             - name: postgres
               mountPath: /var/lib/postgresql/data
+            - name: postgres-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: postgres-init
+          configMap:
+            name: postgres-init
   volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim
