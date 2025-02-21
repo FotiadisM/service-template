@@ -36,5 +36,7 @@ devbox shell
 ## Optional TODO
 
 - [x] Integrate some kubernetes development tool
-  - [ ] change jaeger to stateful set
-  - [ ] add health check in jaeger
+  - [ ] change prometheus to mimir
+  - [ ] instrument logging
+  - [ ] add loki
+  - [x] don't instrument health checks

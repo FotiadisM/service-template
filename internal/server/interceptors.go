@@ -1,11 +1,14 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"connectrpc.com/connect"
+	"connectrpc.com/grpchealth"
 	"connectrpc.com/otelconnect"
 
 	"github.com/FotiadisM/service-template/internal/config"
@@ -19,7 +22,22 @@ import (
 var errUnexpected = errors.New("unexpected error")
 
 func OtelMiddleware() (connect.Interceptor, error) {
-	m, err := otelconnect.NewInterceptor()
+	filter := func(_ context.Context, spec connect.Spec) bool {
+		name := strings.TrimLeft(spec.Procedure, "/")
+		parts := strings.SplitN(name, "/", 2)
+		if len(parts) != 2 {
+			return false
+		}
+
+		switch parts[0] {
+		case grpchealth.HealthV1ServiceName:
+			return false
+		}
+
+		return true
+	}
+
+	m, err := otelconnect.NewInterceptor(otelconnect.WithFilter(filter))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create otel middleware: %w", err)
 	}
