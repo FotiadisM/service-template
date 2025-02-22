@@ -25,7 +25,7 @@ func New(config config.DB) (*DB, error) {
 		str += fmt.Sprintf(" %s=%s", k, v)
 	}
 
-	conn, err := otelsql.Open("pgx", str)
+	conn, err := otelsql.Open("pgx", str, otelsql.WithSpanOptions(otelsql.SpanOptions{OmitConnResetSession: true}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
