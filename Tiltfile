@@ -55,6 +55,8 @@ def deploy_observability():
     k8s_resource("tempo", objects=["tempo-config:configmap"], labels="observability")
     k8s_yaml("./.tilt/k8s/observability/jaeger.yaml")
     k8s_resource("jaeger", port_forwards=["16686"], labels="observability")
+    k8s_yaml("./.tilt/k8s/observability/mimir.yaml")
+    k8s_resource("mimir", objects=["mimir-config:configmap"], labels="observability")
     k8s_yaml("./.tilt/k8s/observability/otel-collector.yaml")
     k8s_resource("otel-collector", objects=["otel-collector:configmap"], labels="observability")
     k8s_yaml("./.tilt/k8s/observability/prometheus.yaml")

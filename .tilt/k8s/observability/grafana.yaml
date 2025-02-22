@@ -22,17 +22,29 @@ data:
   datasources.yaml: |
     apiVersion: 1
     datasources:
-      - name: Tempo
-        type: tempo
+      - name: Mimir
+        type: prometheus
         uid: 1
-        url: http://tempo:3200
+        url: http://mimir:9009/prometheus
         access: proxy
         basicAuth: false
+        isDefault: true
         jsonData:
           nodeGraph:
             enabled: true
           streamingEnabled:
             search: true
+      - name: Tempo
+        type: tempo
+        uid: 2
+        url: http://tempo:3200
+        access: proxy
+        basicAuth: false
+        jsonData:
+          cacheLevel: Low
+          httpMethod: POST
+          prometheusType: Mimir
+          prometheusVersion: "2.9.1"
 ---
 apiVersion: apps/v1
 kind: StatefulSet

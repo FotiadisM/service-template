@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mimir
+spec:
+  selector:
+    app.kubernetes.io/name: mimir
+  ports:
+    - port: 9009
+      targetPort: 9009
+      protocol: TCP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mimir-config
+  labels:
+    app.kubernetes.io/name: mimir
+data:
+  mimir.yaml: |
+    multitenancy_enabled: false
+    server:
+      http_listen_port: 9009
+
+    blocks_storage:
+      backend: filesystem
+      bucket_store:
+        sync_dir: /var/mimir/tsdb-sync
+      filesystem:
+        dir: /var/mimir/data/tsdb
+      tsdb:
+        dir: /var/mimir/tsdb
+
+    compactor:
+      data_dir: /var/mimir/compactor
+      sharding_ring:
+        kvstore:
+          store: memberlist
+
+    distributor:
+      ring:
+        instance_addr: 0.0.0.0
+        kvstore:
+          store: memberlist
+
+    ingester:
+      ring:
+        instance_addr: 0.0.0.0
+        kvstore:
+          store: memberlist
+        replication_factor: 1
+
+    ruler_storage:
+      backend: filesystem
+      filesystem:
+        dir: /var/mimir/rules
+
+    store_gateway:
+      sharding_ring:
+        replication_factor: 1
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mimir
+  labels:
+    app.kubernetes.io/name: mimir
+spec:
+  replicas: 1
+  serviceName: mimir
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mimir
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mimir
+    spec:
+      containers:
+        - name: mimir
+          image: grafana/mimir:2.14.3
+          args: ["-config.file=/etc/mimir/mimir.yaml"]
+          ports:
+            - containerPort: 9009
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9009
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9009
+            initialDelaySeconds: 5
+          volumeMounts:
+            - name: mimir
+              mountPath: /var/mimir
+            - name: mimir-config
+              mountPath: /etc/mimir/
+      volumes:
+        - name: mimir-config
+          configMap:
+            name: mimir-config
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: mimir
+        labels:
+          app.kubernetes.io/name: mimir
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
