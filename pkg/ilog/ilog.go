@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/lmittmann/tint"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 func Err(err error) slog.Attr {
@@ -47,13 +48,19 @@ func NewLogger(opts ...Option) *slog.Logger {
 
 	var logger *slog.Logger
 	if options.JSON {
-		logger = slog.New(slog.NewJSONHandler(options.Writer, handlerOptions))
+		logger = slog.New(NewFanoutHandler(
+			otelslog.NewHandler("book-svc", otelslog.WithSource(options.AddSource)),
+			slog.NewJSONHandler(options.Writer, handlerOptions),
+		))
 	} else {
-		logger = slog.New(tint.NewHandler(options.Writer, &tint.Options{
-			Level:       options.LogLevel,
-			AddSource:   options.AddSource,
-			ReplaceAttr: replaceAttrFunc,
-		}))
+		logger = slog.New(NewFanoutHandler(
+			otelslog.NewHandler("book-svc", otelslog.WithSource(options.AddSource)),
+			tint.NewHandler(options.Writer, &tint.Options{
+				Level:       options.LogLevel,
+				AddSource:   options.AddSource,
+				ReplaceAttr: replaceAttrFunc,
+			}),
+		))
 	}
 
 	if len(options.Tags) > 0 {
