@@ -36,7 +36,8 @@ devbox shell
 ## Optional TODO
 
 - [x] Integrate some kubernetes development tool
-  - [ ] change prometheus to mimir
-  - [ ] instrument logging
-  - [ ] add loki
+  - [x] change prometheus to mimir
+  - [x] instrument logging
+  - [x] add loki
   - [x] don't instrument health checks
+  - [ ] create k6s load tests
