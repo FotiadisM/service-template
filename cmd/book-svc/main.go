@@ -10,6 +10,7 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpchealth"
+	"go.opentelemetry.io/otel"
 
 	"github.com/FotiadisM/service-template/api/docs"
 	"github.com/FotiadisM/service-template/api/gen/go/book/v1/bookv1connect"
@@ -40,10 +41,13 @@ func main() {
 		ilog.WithAddSource(config.Logging.AddSource),
 	)
 	slog.SetDefault(log)
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
+		log.Warn("open-telemetry", ilog.Err(err))
+	}))
 	defer func() {
 		err = shutdownFunc(ctx)
 		if err != nil {
-			log.Error("failed to shutdown otel", ilog.Err(err))
+			log.Warn("failed to shutdown otel", ilog.Err(err))
 		}
 	}()
 
