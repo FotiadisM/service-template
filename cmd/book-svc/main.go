@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -27,31 +28,29 @@ func main() {
 	ctx := context.Background()
 	config := config.NewConfig(ctx)
 
+	shutdownFunc, err := initializeOTEL(ctx, config.Inst)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "failed to initialize otel SDK: %v\n", err)
+		os.Exit(1)
+	}
+
 	log := ilog.NewLogger(
 		ilog.WithLogLevel(slog.Level(config.Logging.Level)),
 		ilog.WithJSON(config.Logging.JSON),
 		ilog.WithAddSource(config.Logging.AddSource),
 	)
 	slog.SetDefault(log)
+	defer func() {
+		err = shutdownFunc(ctx)
+		if err != nil {
+			log.Error("failed to shutdown otel", ilog.Err(err))
+		}
+	}()
 
 	db, err := database.New(config.DB)
 	if err != nil {
 		log.Error("failed to create db", ilog.Err(err))
 		os.Exit(1)
-	}
-
-	if !config.Inst.OtelSDKDisabled {
-		var shutdownFunc otelShutDownFunc
-		shutdownFunc, err = initializeOTEL(ctx, log, config.Inst.OtelExporterAddr)
-		if err != nil {
-			log.Error("failed to initialize otel SDK", ilog.Err(err))
-		}
-		defer func() {
-			err = shutdownFunc(ctx)
-			if err != nil {
-				log.Error("failed to shutdown otel", ilog.Err(err))
-			}
-		}()
 	}
 
 	mux := http.NewServeMux()

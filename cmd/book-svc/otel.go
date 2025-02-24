@@ -4,28 +4,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/log/global"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/FotiadisM/service-template/pkg/ilog"
+	"github.com/FotiadisM/service-template/internal/config"
 )
 
 type otelShutDownFunc func(ctx context.Context) error
 
-func initializeOTEL(ctx context.Context, log *slog.Logger, exporterAddr string) (otelShutDownFunc, error) {
-	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
-		log.Error("open-telemtry", ilog.Err(err))
-	}))
+func initializeOTEL(ctx context.Context, config config.Instrumentation) (otelShutDownFunc, error) {
+	if config.OtelSDKDisabled {
+		return func(ctx context.Context) error { return nil }, nil
+	}
 
-	conn, err := grpc.NewClient(exporterAddr,
+	conn, err := grpc.NewClient(config.OtelExporterAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -48,9 +50,9 @@ func initializeOTEL(ctx context.Context, log *slog.Logger, exporterAddr string) 
 
 	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	tracerProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithResource(res),
 		sdktrace.WithSpanProcessor(bsp),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 	)
 	otel.SetTracerProvider(tracerProvider)
 
@@ -60,17 +62,25 @@ func initializeOTEL(ctx context.Context, log *slog.Logger, exporterAddr string) 
 	}
 
 	meterProvider := sdkmetric.NewMeterProvider(
-		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
 		sdkmetric.WithResource(res),
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
 	)
 	otel.SetMeterProvider(meterProvider)
+
+	logExporter, err := otlploggrpc.New(ctx, otlploggrpc.WithGRPCConn(conn))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create log exporter: %w", err)
+	}
+	loggerProvider := sdklog.NewLoggerProvider(
+		sdklog.WithResource(res),
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(logExporter)),
+	)
+	global.SetLoggerProvider(loggerProvider)
 
 	fn := func(ctx context.Context) error {
 		err := tracerProvider.Shutdown(ctx)
 		return errors.Join(err, meterProvider.Shutdown(ctx))
 	}
-
-	log.Info("initialized OTEL SDK")
 
 	return fn, nil
 }
