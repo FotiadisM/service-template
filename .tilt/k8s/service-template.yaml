@@ -66,7 +66,7 @@ spec:
             - name: OTEL_EXPORTER_ADDR
               value: otel-collector-grpc:4317
             - name: OTEL_SDK_DISABLED
-              value: "false"
+              value: "true"
           livenessProbe:
             grpc:
               port: 8080
