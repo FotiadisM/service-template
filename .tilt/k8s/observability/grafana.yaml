@@ -22,7 +22,7 @@ data:
   datasources.yaml: |
     apiVersion: 1
     datasources:
-      - name: Mimir
+      - name: Prometheus
         type: prometheus
         uid: 1
         url: http://mimir:9009/prometheus
@@ -51,6 +51,15 @@ data:
           httpMethod: POST
           prometheusType: Mimir
           prometheusVersion: "2.9.1"
+          tracesToLogsV2:
+            customQuery: true
+            datasourceUid: "2"
+            query: "{$$__tags} | trace_id=\"$${__span.traceId}\""
+            spanEndTimeShift: 5m
+            spanStartTimeShift: "-5m"
+            tags:
+              - key: service.name
+                value: service_name
 ---
 apiVersion: apps/v1
 kind: StatefulSet
