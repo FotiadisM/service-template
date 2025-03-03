@@ -1,4 +1,90 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+      - namespaces
+      - namespaces/status
+      - nodes
+      - nodes/spec
+      - pods
+      - pods/status
+      - replicationcontrollers
+      - replicationcontrollers/status
+      - resourcequotas
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-collector
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector
+    namespace: default
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: otel-collector
@@ -34,12 +120,24 @@ metadata:
 data:
   config.yaml: |
     receivers:
+      k8s_events:
       otlp:
         protocols:
+          http:
+            endpoint: 0.0.0.0:4318
           grpc:
             endpoint: 0.0.0.0:4317
 
     processors:
+      batch:
+      resource/k8s_events:
+        attributes:
+          - action: insert
+            key: job
+            value: kubernetes-events
+          - action: insert
+            key: k8s.cluster.name
+            value: fotiadism-local
 
     extensions:
       health_check:
@@ -47,38 +145,41 @@ data:
         path: /healthz
 
     exporters:
+      debug:
       otlp/jaeger:
         endpoint: jaeger:4317
         tls:
           insecure: true
-      otlp/tempo:
-        endpoint: tempo:4317
-        tls:
-          insecure: true
+      otlphttp/tempo:
+        endpoint: http://tempo:4318
       otlphttp/loki:
         endpoint: http://loki:3100/otlp
       otlphttp/prometheus:
         endpoint: http://prometheus:9090/api/v1/otlp
       otlphttp/mimir:
         endpoint: http://mimir:9009/otlp
-      debug:
 
     service:
       extensions: [health_check]
       pipelines:
         traces:
           receivers: [otlp]
-          processors: []
-          exporters: [otlp/tempo]
+          processors: [batch]
+          exporters: [otlphttp/tempo]
 
         metrics:
           receivers: [otlp]
-          processors: []
+          processors: [batch]
           exporters: [otlphttp/mimir]
 
         logs:
           receivers: [otlp]
-          processors: []
+          processors: [batch]
+          exporters: [otlphttp/loki]
+
+        logs/k8s_events:
+          receivers: [k8s_events]
+          processors: [batch, resource/k8s_events]
           exporters: [otlphttp/loki]
 ---
 apiVersion: apps/v1
@@ -97,6 +198,7 @@ spec:
       labels:
         app.kubernetes.io/name: otel-collector
     spec:
+      serviceAccountName: otel-collector
       containers:
         - name: otel-collector
           image: otel/opentelemetry-collector-contrib:0.115.1
