@@ -130,14 +130,26 @@ data:
 
     processors:
       batch:
+      k8sattributes:
       resource/k8s_events:
         attributes:
           - action: insert
-            key: job
+            key: service.name
             value: kubernetes-events
           - action: insert
             key: k8s.cluster.name
             value: fotiadism-local
+      resource/enrichment:
+        attributes:
+          - action: insert
+            key: k8s.cluster.name
+            value: fotiadism-local
+          - action: insert
+            key: service.instance.id
+            from_attribute: k8s.pod.uid
+          - action: insert
+            key: deployment.environment.name
+            value: local
 
     extensions:
       health_check:
@@ -164,17 +176,17 @@ data:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [batch]
+          processors: [k8sattributes, batch, resource/enrichment]
           exporters: [otlphttp/tempo]
 
         metrics:
           receivers: [otlp]
-          processors: [batch]
+          processors: [k8sattributes, batch, resource/enrichment]
           exporters: [otlphttp/mimir]
 
         logs:
           receivers: [otlp]
-          processors: [batch]
+          processors: [k8sattributes, batch, resource/enrichment]
           exporters: [otlphttp/loki]
 
         logs/k8s_events:

@@ -49,7 +49,6 @@ data:
     distributor:
       otlp_config:
         default_resource_attributes_as_index_labels:
-          - job
           - service.name
           - service.instance.id
           - deployment.environment

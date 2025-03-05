@@ -29,7 +29,7 @@ spec:
       containers:
         - name: grpcui
           image: fullstorydev/grpcui:v1.4.2
-          args: ["-plaintext", "-port", "8080", "service-template-grpc:8080"]
+          args: ["-port", "8080", "-plaintext", "service-template:8080"]
           ports:
             - containerPort: 8080
           env:
