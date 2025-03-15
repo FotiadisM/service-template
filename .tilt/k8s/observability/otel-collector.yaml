@@ -150,6 +150,15 @@ data:
           - action: insert
             key: deployment.environment.name
             value: local
+      transform/metrics_labels:
+        error_mode: propagate
+        metric_statements:
+          - context: datapoint
+            statements:
+              - set(attributes["k8s_cluster_name"], resource.attributes["k8s.cluster.name"])
+              - set(attributes["k8s_namespace_name"], resource.attributes["k8s_namespace_name"])
+              - set(attributes["k8s_deployment_name"], resource.attributes["k8s.deployment.name"])
+              - set(attributes["deployment_environment_name"], resource.attributes["deployment.environment.name"])
 
     extensions:
       health_check:
@@ -170,6 +179,8 @@ data:
         endpoint: http://prometheus:9090/api/v1/otlp
       otlphttp/mimir:
         endpoint: http://mimir:9009/otlp
+      prometheusremotewrite:
+        endpoint: http://mimir:9009/api/v1/push
 
     service:
       extensions: [health_check]
@@ -181,8 +192,8 @@ data:
 
         metrics:
           receivers: [otlp]
-          processors: [k8sattributes, batch, resource/enrichment]
-          exporters: [otlphttp/mimir]
+          processors: [k8sattributes, batch, resource/enrichment, transform/metrics_labels]
+          exporters: [prometheusremotewrite]
 
         logs:
           receivers: [otlp]
@@ -213,8 +224,10 @@ spec:
       serviceAccountName: otel-collector
       containers:
         - name: otel-collector
-          image: otel/opentelemetry-collector-contrib:0.115.1
-          args: ["--config=/etc/otel/config.yaml"]
+          image: otel/opentelemetry-collector-contrib:0.121.0
+          args:
+            - --config=/etc/otel/config.yaml
+            - --feature-gates=pkg.translator.prometheus.NormalizeName
           ports:
             - containerPort: 1888 # pprof extension
             - containerPort: 8888 # Prometheus metrics exposed by the Collector

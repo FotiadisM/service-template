@@ -50,6 +50,9 @@ data:
           store: memberlist
         replication_factor: 1
 
+    limits:
+      out_of_order_time_window: 10m
+
     ruler_storage:
       backend: filesystem
       filesystem:

@@ -45,9 +45,9 @@ def deploy_service_and_helpers():
 
     # Helpers, aka SwaggerUI and grpcUI
     k8s_yaml("./.tilt/k8s/grpcui/grpcui.yaml")
-    k8s_resource("grpcui", port_forwards="8082:8080", labels="service-template")
+    k8s_resource("grpcui", port_forwards="8082:8080", labels="service-template", resource_deps=["service-template"])
     k8s_yaml("./.tilt/k8s/swagger/swagger.yaml")
-    k8s_resource("swagger", port_forwards="8085:8080", labels="service-template")
+    k8s_resource("swagger", port_forwards="8085:8080", labels="service-template", resource_deps=["service-template"])
 
 
 def deploy_observability():
