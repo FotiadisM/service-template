@@ -13,7 +13,7 @@ require (
 	github.com/XSAM/otelsql v0.36.0
 	github.com/bufbuild/protovalidate-go v0.9.1
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jackc/pgx/v5 v5.7.3
 	github.com/lmittmann/tint v1.0.7
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/rs/cors v1.11.1
