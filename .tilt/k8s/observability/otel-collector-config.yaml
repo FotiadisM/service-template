@@ -1,0 +1,86 @@
+receivers:
+  k8s_events:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+  k8sattributes:
+  resource/k8s_events:
+    attributes:
+      - action: insert
+        key: service.name
+        value: kubernetes-events
+      - action: insert
+        key: k8s.cluster.name
+        value: fotiadism-local
+  resource/enrichment:
+    attributes:
+      - action: insert
+        key: k8s.cluster.name
+        value: fotiadism-local
+      - action: insert
+        key: service.instance.id
+        from_attribute: k8s.pod.uid
+      - action: insert
+        key: deployment.environment.name
+        value: local
+  transform/metrics_labels:
+    error_mode: propagate
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["k8s_cluster_name"], resource.attributes["k8s.cluster.name"])
+          - set(attributes["k8s_namespace_name"], resource.attributes["k8s_namespace_name"])
+          - set(attributes["k8s_deployment_name"], resource.attributes["k8s.deployment.name"])
+          - set(attributes["deployment_environment_name"], resource.attributes["deployment.environment.name"])
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: /healthz
+
+exporters:
+  debug:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+  otlphttp/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp
+  otlphttp/mimir:
+    endpoint: http://mimir:9009/otlp
+  prometheusremotewrite:
+    endpoint: http://mimir:9009/api/v1/push
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [k8sattributes, batch, resource/enrichment]
+      exporters: [otlphttp/tempo]
+
+    metrics:
+      receivers: [otlp]
+      processors:
+        [k8sattributes, batch, resource/enrichment, transform/metrics_labels]
+      exporters: [prometheusremotewrite]
+
+    logs:
+      receivers: [otlp]
+      processors: [k8sattributes, batch, resource/enrichment]
+      exporters: [otlphttp/loki]
+
+    logs/k8s_events:
+      receivers: [k8s_events]
+      processors: [batch, resource/k8s_events]
+      exporters: [otlphttp/loki]

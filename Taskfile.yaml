@@ -1,9 +1,18 @@
 version: "3"
 
+# Taskfile usage: https://taskfile.dev/usage/
+# Taskfile style guide: https://taskfile.dev/styleguide/
+# Taskfile shell autocompletion: https://taskfile.dev/installation/#setup-completions
+
 tasks:
+  default:
+    cmds:
+      - task: help
+
   help:
-    desc: Display a summary of available tasks
-    cmd: task -l
+    desc: Display a summary of available tasks and exit
+    cmd: task --list-all --sort alphanumeric
+    silent: true
 
   build:
     desc: Build the application
@@ -146,3 +155,19 @@ tasks:
   config:fmt:
     desc: Format config files
     cmd: prettier --write --log-level warn .
+
+  cluster:create:
+    desc: Create a local Kubernetes cluster
+    cmd: k3d cluster create --config .tilt/k3d.yaml
+
+  cluster:start:
+    desc: Start the local Kubernetes cluster
+    cmd: k3d cluster start fotiadism-local
+
+  cluster:stop:
+    desc: Stop the local Kubernetes cluster
+    cmd: k3d cluster stop fotiadism-local
+
+  cluster:delete:
+    desc: Delete the local Kubernetes cluster
+    cmd: k3d cluster delete fotiadism-local

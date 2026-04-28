@@ -8,7 +8,7 @@ settings = {
         "service-template-compile"
     ]
 }
-config.set_enabled_resources(settings.get("enabled_resources"))
+# config.set_enabled_resources(settings.get("enabled_resources"))
 
 # Extensions
 load("ext://restart_process", "docker_build_with_restart")
