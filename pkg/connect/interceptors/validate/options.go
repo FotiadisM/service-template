@@ -1,6 +1,6 @@
 package validate
 
-import "github.com/bufbuild/protovalidate-go"
+import "buf.build/go/protovalidate"
 
 type ErrorHandlerFunc func(err error) error
 

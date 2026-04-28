@@ -552,12 +552,6 @@
         }
       }
     },
-    "v1ThrowPanicResponse": {
-      "type": "object"
-    },
-    "v1ThrowServiceErrorResponse": {
-      "type": "object"
-    },
     "v1UpdateAuthorResponse": {
       "type": "object",
       "properties": {

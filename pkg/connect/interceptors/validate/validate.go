@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
-	"github.com/bufbuild/protovalidate-go"
 )
 
 func DefaultErrorHanlder(err error) error {
