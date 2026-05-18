@@ -24,7 +24,7 @@ type otelShutDownFunc func(ctx context.Context) error
 
 func initializeOTEL(ctx context.Context, config config.Instrumentation) (otelShutDownFunc, error) {
 	if config.OtelSDKDisabled {
-		return func(ctx context.Context) error { return nil }, nil
+		return func(_ context.Context) error { return nil }, nil
 	}
 
 	conn, err := grpc.NewClient(config.OtelExporterAddr,

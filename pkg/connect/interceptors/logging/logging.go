@@ -37,12 +37,12 @@ func DefaultErrorDetailsAttrFunc(details []*connect.ErrorDetail) []slog.Attr {
 
 		switch t := protoMsg.(type) {
 		case *errdetails.BadRequest:
-			attrs := []slog.Attr{}
+			attrs := make([]slog.Attr, len(t.FieldViolations))
 			for i, fv := range t.FieldViolations {
-				attrs = append(attrs, slog.Group(strconv.Itoa(i),
+				attrs[i] = slog.Group(strconv.Itoa(i),
 					slog.String("field", fv.Field),
 					slog.String("description", fv.Description),
-				))
+				)
 			}
 			returnAttrs = append(returnAttrs, slog.Attr{
 				Key:   "error_badrequest",
@@ -50,9 +50,9 @@ func DefaultErrorDetailsAttrFunc(details []*connect.ErrorDetail) []slog.Attr {
 			})
 
 		case *errdetails.DebugInfo:
-			attrs := []slog.Attr{}
-			for k, v := range t.StackEntries {
-				attrs = append(attrs, slog.String(strconv.Itoa(k), v))
+			attrs := make([]slog.Attr, len(t.StackEntries))
+			for i, v := range t.StackEntries {
+				attrs[i] = slog.String(strconv.Itoa(i), v)
 			}
 			returnAttrs = append(returnAttrs, slog.Attr{
 				Key: "error_debuginfo",
@@ -62,9 +62,11 @@ func DefaultErrorDetailsAttrFunc(details []*connect.ErrorDetail) []slog.Attr {
 			})
 
 		case *errdetails.ErrorInfo:
-			attrs := []slog.Attr{}
+			index := 0
+			attrs := make([]slog.Attr, len(t.Metadata))
 			for k, v := range t.Metadata {
-				attrs = append(attrs, slog.String(k, v))
+				attrs[index] = slog.String(k, v)
+				index++
 			}
 			returnAttrs = append(returnAttrs, slog.Attr{
 				Key: "error_errorinfo",
@@ -75,13 +77,13 @@ func DefaultErrorDetailsAttrFunc(details []*connect.ErrorDetail) []slog.Attr {
 			})
 
 		case *errdetails.PreconditionFailure:
-			attrs := []slog.Attr{}
-			for k, v := range t.Violations {
-				attrs = append(attrs, slog.Attr{Key: strconv.Itoa(k), Value: slog.GroupValue(
+			attrs := make([]slog.Attr, len(t.Violations))
+			for i, v := range t.Violations {
+				attrs[i] = slog.Attr{Key: strconv.Itoa(i), Value: slog.GroupValue(
 					slog.String("type", v.Type),
 					slog.String("subject", v.Subject),
 					slog.String("description", v.Description),
-				)})
+				)}
 			}
 			returnAttrs = append(returnAttrs, slog.Attr{
 				Key: "error_preconditionfailure",

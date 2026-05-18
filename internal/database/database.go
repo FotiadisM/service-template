@@ -84,7 +84,7 @@ func WithConfiguredTx(ctx context.Context, db *DB, options *sql.TxOptions, fn Tx
 
 	err = fn(&DB{
 		DB:      db.DB,
-		Queries: db.Queries.WithTx(tx),
+		Queries: db.WithTx(tx),
 	})
 	if err != nil {
 		if txErr := tx.Rollback(); txErr != nil {

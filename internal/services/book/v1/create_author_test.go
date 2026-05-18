@@ -49,7 +49,7 @@ func (s *EndpointTestingSuite) TestCreateAuthor(t *testing.T) {
 func (s *UnitTestingSuite) TestCreateAuthorHTTP(t *testing.T) {
 	ctx := t.Context()
 
-	s.DB.EXPECT().CreateAuthor(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, in queries.CreateAuthorParams) (queries.Author, error) {
+	s.DB.EXPECT().CreateAuthor(mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, in queries.CreateAuthorParams) (queries.Author, error) {
 		now := time.Now()
 		author := queries.Author{
 			ID:        in.ID,
@@ -77,12 +77,13 @@ func (s *UnitTestingSuite) TestCreateAuthorHTTP(t *testing.T) {
 
 	res, err := s.HTTPClint.Do(req)
 	require.NoError(t, err)
+	defer res.Body.Close()
 
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	res_body := &bookv1.CreateAuthorResponse{}
-	err = json.NewDecoder(res.Body).Decode(res_body)
+	resBody := &bookv1.CreateAuthorResponse{}
+	err = json.NewDecoder(res.Body).Decode(resBody)
 	require.NoError(t, err)
-	require.NotEmpty(t, res_body.Author)
+	require.NotEmpty(t, resBody.Author)
 
 	s.DB.AssertExpectations(t)
 }

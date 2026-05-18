@@ -64,9 +64,11 @@ func NewLogger(opts ...Option) *slog.Logger {
 	}
 
 	if len(options.Tags) > 0 {
-		group := []any{}
+		index := 0
+		group := make([]any, len(options.Tags))
 		for k, v := range options.Tags {
-			group = append(group, slog.Attr{Key: k, Value: slog.StringValue(v)})
+			group[index] = slog.Attr{Key: k, Value: slog.StringValue(v)}
+			index++
 		}
 		logger = logger.With(slog.Group("tags", group...))
 	}

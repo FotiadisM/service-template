@@ -36,11 +36,11 @@ func ReflectionHandler(mux *http.ServeMux, services ...string) {
 }
 
 func HTTPTranscoderHandler(mux *http.ServeMux, services map[string]http.Handler) error {
-	vanguardServices := []*vanguard.Service{}
+	index := 0
+	vanguardServices := make([]*vanguard.Service, len(services))
 	for path, handler := range services {
-		vanguardServices = append(vanguardServices,
-			vanguard.NewService(path, handler),
-		)
+		vanguardServices[index] = vanguard.NewService(path, handler)
+		index++
 	}
 
 	var transcoder *vanguard.Transcoder

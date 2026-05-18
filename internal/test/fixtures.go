@@ -31,6 +31,8 @@ type Fixtures struct {
 }
 
 func NewFixtures(t *testing.T) *Fixtures {
+	t.Helper()
+
 	author1 := queries.Author{
 		ID:        uuidParser(t, "01950b20-756a-7056-bd6a-272db29cb3d1"),
 		Name:      "Author1",
@@ -110,6 +112,8 @@ func bookToCreateParams(book queries.Book) queries.CreateBookParams {
 }
 
 func (f *Fixtures) Load(ctx context.Context, t *testing.T, db *sql.DB) {
+	t.Helper()
+
 	authors := []queries.Author{f.Author1, f.Author2}
 	books := []queries.Book{f.Book1, f.Book2, f.Book3, f.Book4, f.Book5}
 

@@ -41,7 +41,7 @@ func (s *EndpointTestingSuite) TestCreateBookReview(t *testing.T) {
 func (s *UnitTestingSuite) TestCreateBookReviewHTTP(t *testing.T) {
 	ctx := t.Context()
 
-	s.DB.EXPECT().CreateBookReview(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, in queries.CreateBookReviewParams) (queries.BookReview, error) {
+	s.DB.EXPECT().CreateBookReview(mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, in queries.CreateBookReviewParams) (queries.BookReview, error) {
 		now := time.Now()
 		book := queries.BookReview{
 			ID:        in.ID,
@@ -54,30 +54,31 @@ func (s *UnitTestingSuite) TestCreateBookReviewHTTP(t *testing.T) {
 		return book, nil
 	})
 
-	req_buf := &bytes.Buffer{}
-	req_body := &bookv1.CreateBookReviewRequest{
+	reqBuf := &bytes.Buffer{}
+	reqBody := &bookv1.CreateBookReviewRequest{
 		BookId: "0194fee7-3d16-7703-b28a-5b5c6ff6ecf4",
 		Rating: 2,
 		Text:   "this is review",
 	}
-	err := json.NewEncoder(req_buf).Encode(req_body)
+	err := json.NewEncoder(reqBuf).Encode(reqBody)
 	require.NoError(t, err)
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		fmt.Sprintf("%s/v1/books/%s/reviews", s.ServerURL, req_body.BookId),
-		req_buf,
+		fmt.Sprintf("%s/v1/books/%s/reviews", s.ServerURL, reqBody.BookId),
+		reqBuf,
 	)
 	require.NoError(t, err)
 
 	res, err := s.HTTPClint.Do(req)
 	require.NoError(t, err)
+	defer res.Body.Close()
 
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	res_body := &bookv1.CreateBookReviewResponse{}
-	err = json.NewDecoder(res.Body).Decode(res_body)
+	resBody := &bookv1.CreateBookReviewResponse{}
+	err = json.NewDecoder(res.Body).Decode(resBody)
 	require.NoError(t, err)
-	require.NotEmpty(t, res_body.Review)
+	require.NotEmpty(t, resBody.Review)
 
 	s.DB.AssertExpectations(t)
 }

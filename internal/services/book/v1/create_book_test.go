@@ -52,7 +52,7 @@ func (s *EndpointTestingSuite) TestCreateBook(t *testing.T) {
 func (s *UnitTestingSuite) TestCreateBookHTTP(t *testing.T) {
 	ctx := t.Context()
 
-	s.DB.EXPECT().CreateBook(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, in queries.CreateBookParams) (queries.Book, error) {
+	s.DB.EXPECT().CreateBook(mock.Anything, mock.Anything).RunAndReturn(func(_ context.Context, in queries.CreateBookParams) (queries.Book, error) {
 		book := queries.Book{
 			ID:          in.ID,
 			Title:       in.Title,
@@ -62,29 +62,30 @@ func (s *UnitTestingSuite) TestCreateBookHTTP(t *testing.T) {
 		return book, nil
 	})
 
-	req_buf := &bytes.Buffer{}
-	req_body := &bookv1.CreateBookRequest{
+	reqBuf := &bytes.Buffer{}
+	reqBody := &bookv1.CreateBookRequest{
 		Title:    "book_title",
 		AuthorId: "0194fee7-3d16-7703-b28a-5b5c6ff6ecf4",
 	}
-	err := json.NewEncoder(req_buf).Encode(req_body)
+	err := json.NewEncoder(reqBuf).Encode(reqBody)
 	require.NoError(t, err)
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
 		fmt.Sprintf("%s/v1/books", s.ServerURL),
-		req_buf,
+		reqBuf,
 	)
 	require.NoError(t, err)
 
 	res, err := s.HTTPClint.Do(req)
 	require.NoError(t, err)
+	defer res.Body.Close()
 
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	res_body := &bookv1.CreateBookResponse{}
-	err = json.NewDecoder(res.Body).Decode(res_body)
+	resBody := &bookv1.CreateBookResponse{}
+	err = json.NewDecoder(res.Body).Decode(resBody)
 	require.NoError(t, err)
-	require.NotEmpty(t, res_body.Book)
+	require.NotEmpty(t, resBody.Book)
 
 	s.DB.AssertExpectations(t)
 }

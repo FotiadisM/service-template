@@ -1,15 +1,7 @@
-run:
-  concurrency: 4
-  timeout: 5m
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
     - asasalint
     - asciicheck
     - bidichk
@@ -20,10 +12,9 @@ linters:
     - copyloopvar
     - decorder
     - dogsled
-    - dupl
     - dupword
     - durationcheck
-    - err113
+    - errcheck
     - errchkjson
     - errname
     - errorlint
@@ -33,16 +24,17 @@ linters:
     - gocheckcompilerdirectives
     - goconst
     - godot
-    - gofumpt
     - goheader
     - gosec
+    - govet
     - importas
     - inamedparam
+    - ineffassign
     - loggercheck
-    - mirror
-    - nestif
-    - misspell
     - makezero
+    - mirror
+    - misspell
+    - nestif
     - nilerr
     - nilnil
     - noctx
@@ -56,13 +48,29 @@ linters:
     - rowserrcheck
     - sloglint
     - sqlclosecheck
+    - staticcheck
     - tagalign
     - tagliatelle
-    - tenv
     - testifylint
     - thelper
     - tparallel
     - unconvert
+    - unused
     - usestdlibvars
     - wastedassign
     - whitespace
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+      - legacy
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/FotiadisM/service-template
